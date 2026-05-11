@@ -10,7 +10,8 @@ import { logger } from "./config/logger";
 import prisma from "./config/prisma";
 
 const PORT = process.env.PORT || 5000;
-async function startServer() {
+
+(async function startServer() {
   try {
     await prisma.$connect();
     logger.info("Database connected successfully");
@@ -22,6 +23,4 @@ async function startServer() {
     logger.error("Database connection failed");
     process.exit(1);
   }
-}
-
-startServer();
+})();

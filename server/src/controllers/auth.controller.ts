@@ -56,17 +56,20 @@ const register = asyncHandler(async (req: Request, res: Response) => {
 
 const login = asyncHandler(async (req: Request, res: Response) => {
     // const { email, password } = loginSchema.parse(req.body);
-    const { email, password } = req.body;
+    // const { email, password } = req.body;
+    const validatedData = req.body
 
+    // console.log(validatedData);
     const user = await prisma.user.findUnique({
-        where: { email: email },
+        where: { email: validatedData.email },
     });
+    // console.log(user)
 
     if (!user) {
         throw new ApiError(404, 'User not found');
     }
 
-    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    const isPasswordCorrect = await bcrypt.compare(validatedData.password, user.password);
 
     if (!isPasswordCorrect) {
         throw new ApiError(400, 'Invalid credentials');
@@ -76,6 +79,7 @@ const login = asyncHandler(async (req: Request, res: Response) => {
         id: user.id,
         role: user.role,
     });
+    // console.log("Access token --> "+ accessToken)
 
     const refreshToken = generateRefreshToken({
         id: user.id,
@@ -95,6 +99,7 @@ const login = asyncHandler(async (req: Request, res: Response) => {
             role: true,
         }
     });
+    // console.log(updatedUser)
 
     const options = {
         httpOnly: true,
@@ -147,10 +152,11 @@ const refreshAccessToken = asyncHandler(async (req: Request, res: Response) => {
 });
 
 const logout = asyncHandler(async (req: Request, res: Response) => {
-    // const { userId } = req.body;
-    const userId = req.user?.id;
 
-    if (userId) throw new ApiError(401, "Unauthorized");
+    const userId = req.user?.id;
+    console.log(userId)
+
+    if (!userId) throw new ApiError(401, "Unauthorized");
 
 
     await prisma.user.update({
@@ -166,6 +172,10 @@ const logout = asyncHandler(async (req: Request, res: Response) => {
         .status(200)
         .json(new ApiResponse(200, {}, 'Logged out successfully'));
 });
+
+
+
+
 
 export { 
     register, 

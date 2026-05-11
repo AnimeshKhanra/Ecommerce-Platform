@@ -21,9 +21,10 @@ export const authMiddleware = asyncHandler (async (
             throw new ApiError(400, "Token is empty");
         }
 
+        // console.log(process.env.JWT_ACCESS_SECRET!)
         const decodedToken = jwt.verify(
             token,
-            // process.env.JWT_ACCESS_SECRET!
+            // process.env.JWT_ACCESS_SECRET!,
             process.env.JWT_ACCESS_SECRET as Secret,
         ) as {
             id: string;
@@ -33,6 +34,7 @@ export const authMiddleware = asyncHandler (async (
         const user = await prisma.user.findUnique({
             where: { id: decodedToken.id }
         });
+        // console.log(user)
 
         if(!user){
             throw new ApiError(400, "Invalid access token");
