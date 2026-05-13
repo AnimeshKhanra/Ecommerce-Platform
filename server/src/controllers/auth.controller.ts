@@ -1,13 +1,15 @@
 import { Request, Response } from 'express';
+import { logger } from '../config/logger';
 import { asyncHandler } from '../utils/asyncHandler';
 import { ApiError } from '../utils/ApiError';
 import { ApiResponse } from '../utils/ApiResponse';
+import { setCache, delCache } from '../utils/redisUtils';
 import {
     generateAccessToken,
     generateRefreshToken,
 } from '../utils/generateTokens';
 
-import { registerSchema, loginSchema } from '../schemas/auth.schema';
+
 
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -22,22 +24,25 @@ import prisma from '../config/prisma';
 
 const register = asyncHandler(async (req: Request, res: Response) => {
     // const validatedData = registerSchema.parse(req.body);
-    const validatedData = req.body;
+    // const validatedData = req.body;   // OR,
+    const { name, email, password } = req.body;
 
     const existingUser = await prisma.user.findUnique({
-        where: { email: validatedData.email },
+        // where: { email: validatedData.email },
+        where: { email },
     });
 
     if (existingUser) {
+        logger.warn(`Duplicate registration attempt: ${email}`);
         throw new ApiError(400, 'User already exists');
     }
 
-    const hashedPassword = await bcrypt.hash(validatedData.password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.create({
         data: {
-            name: validatedData.name,
-            email: validatedData.email,
+            name,
+            email,
             password: hashedPassword,
         },
         select: {
@@ -49,6 +54,10 @@ const register = asyncHandler(async (req: Request, res: Response) => {
         }
     });
 
+    logger.info(`User registered: ${email}`);
+
+    // const { password: _, refreshToken, ...safeUser } = user;
+
     return res
         .status(201)
         .json(new ApiResponse(201, user, 'User registered successfully'));
@@ -56,22 +65,25 @@ const register = asyncHandler(async (req: Request, res: Response) => {
 
 const login = asyncHandler(async (req: Request, res: Response) => {
     // const { email, password } = loginSchema.parse(req.body);
-    // const { email, password } = req.body;
     const validatedData = req.body
+    const { email, password } = req.body;
 
     // console.log(validatedData);
     const user = await prisma.user.findUnique({
-        where: { email: validatedData.email },
+        // where: { email: validatedData.email },
+        where: { email },
     });
     // console.log(user)
 
     if (!user) {
+        logger.warn(`Login failed (user not found): ${email}`);
         throw new ApiError(404, 'User not found');
     }
 
-    const isPasswordCorrect = await bcrypt.compare(validatedData.password, user.password);
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
 
     if (!isPasswordCorrect) {
+        logger.warn(`Wrong password attempt: ${email}`);
         throw new ApiError(400, 'Invalid credentials');
     }
 
@@ -101,6 +113,18 @@ const login = asyncHandler(async (req: Request, res: Response) => {
     });
     // console.log(updatedUser)
 
+    await setCache(
+        `session:${user.id}`,
+        {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+        },
+        60 * 60
+    );
+
+    logger.info(`Login success: ${email}`);
+
     const options = {
         httpOnly: true,
         secure: true
@@ -127,7 +151,10 @@ const refreshAccessToken = asyncHandler(async (req: Request, res: Response) => {
         throw new ApiError(401, 'Refresh token missing');
     }
 
-    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as {
+    const decoded = jwt.verify(
+        refreshToken, 
+        process.env.JWT_REFRESH_SECRET!
+    ) as {
         id: string;
     };
 
@@ -138,6 +165,7 @@ const refreshAccessToken = asyncHandler(async (req: Request, res: Response) => {
     });
 
     if (!user || user.refreshToken !== refreshToken) {
+        logger.warn(`Invalid refresh token attempt`);
         throw new ApiError(401, 'Invalid refresh token');
     }
 
@@ -145,6 +173,8 @@ const refreshAccessToken = asyncHandler(async (req: Request, res: Response) => {
         id: user.id,
         role: user.role,
     });
+
+    logger.info(`Access token refreshed: ${user.email}`);
 
     return res
         .status(200)
@@ -154,7 +184,7 @@ const refreshAccessToken = asyncHandler(async (req: Request, res: Response) => {
 const logout = asyncHandler(async (req: Request, res: Response) => {
 
     const userId = req.user?.id;
-    // console.log(userId)
+    console.log(userId);
 
     if (!userId) throw new ApiError(401, "Unauthorized");
 
@@ -167,6 +197,10 @@ const logout = asyncHandler(async (req: Request, res: Response) => {
             refreshToken: null,
         },
     });
+
+    await delCache(`session:${userId}`);
+
+    logger.info(`Logout success: ${userId}`);
 
     return res
         .status(200)

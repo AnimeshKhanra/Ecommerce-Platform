@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import jwt, { Secret } from "jsonwebtoken";
 import { ApiError } from "../utils/ApiError";
-import prisma from "../config/prisma";
 import { asyncHandler } from "../utils/asyncHandler";
+import { getCache, setCache } from "../utils/redisUtils";
+import prisma from "../config/prisma";
 
 export const authMiddleware = asyncHandler (async (
     req: Request,
@@ -31,6 +32,13 @@ export const authMiddleware = asyncHandler (async (
             role: string;
         }
 
+        const cachedUser = await getCache<any>(`session:${decodedToken.id}`);
+
+        if (cachedUser) {
+            req.user = cachedUser;
+            return next();
+        }
+
         const user = await prisma.user.findUnique({
             where: { id: decodedToken.id }
         });
@@ -39,6 +47,15 @@ export const authMiddleware = asyncHandler (async (
         if(!user){
             throw new ApiError(400, "Invalid access token");
         }
+
+        await setCache(
+            `session:${user.id}`,
+            {
+                id: user.id,
+                role: user.role,
+            },
+            3600
+        )
     
         req.user = {
             id: user.id,
