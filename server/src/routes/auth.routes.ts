@@ -5,9 +5,9 @@ import {
     refreshAccessToken,
     logout
 } from "../controllers/auth.controller"
-// import { adminDashboard } from "../controllers/admin.controller";
+
 import { authMiddleware } from "../middlewares/auth.middleware";
-// import { adminMiddleware } from "../middlewares/admin.middleware";
+
 import { validateBody } from "../middlewares/validateBody";
 import { loginSchema, refreshSchema, registerSchema } from "../schemas/auth.schema";
 

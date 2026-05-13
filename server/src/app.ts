@@ -2,8 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from "cookie-parser";
-import { errorHandler } from './middlewares/errorHandler.middlewares';
-import { limiter } from './middlewares/rateLimiter.middlewares';
+import { errorHandler } from './middlewares/errorHandler.middleware';
+import { limiter } from './middlewares/rateLimiter.middleware';
 
 
 

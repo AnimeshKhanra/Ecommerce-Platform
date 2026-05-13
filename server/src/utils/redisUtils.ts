@@ -1,15 +1,16 @@
 import redis from "../config/redis";
 
+
 const setCache = async (key: string, value: unknown, ttl?: number) => {
     const serializedValue = JSON.stringify(value);
-    if(ttl){
+    if (ttl) {
         await redis.setex(key, ttl, serializedValue);
-    }else{
+    } else {
         await redis.set(key, serializedValue);
     }
 }
 
-const getCache = async <T> (key: string): Promise<T | null> => {
+const getCache = async <T>(key: string): Promise<T | null> => {
     const data = await redis.get(key);
     if (!data) return null;
 

@@ -154,7 +154,7 @@ const refreshAccessToken = asyncHandler(async (req: Request, res: Response) => {
 const logout = asyncHandler(async (req: Request, res: Response) => {
 
     const userId = req.user?.id;
-    console.log(userId)
+    // console.log(userId)
 
     if (!userId) throw new ApiError(401, "Unauthorized");
 
