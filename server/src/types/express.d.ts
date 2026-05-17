@@ -7,8 +7,10 @@ declare global {
                 id: string;
                 role: Role;
             };
+
+            file?: Multer.File;
         }
     }
 }
 
-export { };
+export {};

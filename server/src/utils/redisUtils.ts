@@ -38,6 +38,18 @@ const delCache = async (key: string) => {
     }
 };
 
+const delCacheByPattern = async (pattern: string) => {
+    try {
+        const keys = await redis.keys(pattern);
+        if(keys.length){
+            await redis.del(...keys);
+        }
+        logger.info(`Redis DEL PATTERN: ${pattern}`);
+    } catch (error) {
+        logger.error(`Redis DEL PATTERN Error: ${error}`);
+    }
+}
+
 //TODO: Add error handling and logging for Redis operations
 
-export { setCache, getCache, delCache };
+export { setCache, getCache, delCache, delCacheByPattern };

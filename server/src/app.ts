@@ -25,11 +25,21 @@ app.use(cookieParser());
 //import router
 import authRouter from "./routes/auth.routes"
 import adminRouter from "./routes/admin.routes"
+import productRouter from "./routes/product.routes"
+import categoryRouter from "./routes/category.routes";
+import imageRouter from "./routes/upload.routes";
 
 
 // Router declaration
 app.use("/api/v1/auth", authRouter )
 app.use("/api/v1/admin", adminRouter)
+app.use("/api/v1/products", productRouter)
+app.use("/api/v1/categories", categoryRouter)
+app.use("/api/v1/upload", imageRouter)
+
+
+
+
 
 // Global Error Middleware
 app.use(errorHandler);
