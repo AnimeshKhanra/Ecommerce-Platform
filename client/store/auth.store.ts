@@ -13,7 +13,6 @@ interface AuthState {
   loading: boolean;
 
   setToken: (token: string) => void;
-
   login: (data: LoginPayload) => Promise<void>;
   register: (data: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
@@ -33,8 +32,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       const res = await api.post("/auth/login", data);
 
       set({
-        user: res.data.user,
-        token: res.data.accessToken,
+        user: res.data.data.user || null, // Ensure backend passes user data if needed
+        token: res.data.data.accessToken,
       });
     } finally {
       set({ loading: false });

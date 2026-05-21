@@ -10,23 +10,33 @@ export interface Product {
   price: number;
   stock: number;
   images: string[];
+  categoryId: string;
   category: Category;
   createdAt: string;
+  updatedAt: string;
 }
 
-export interface PaginationData {
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-  hasNext: boolean;
-  hasPrev: boolean;
-}
-
-export interface ProductResponse {
-  success: boolean;
-  data: {
-    products: Product[];
-    pagination: PaginationData;
+export interface ProductsResponse {
+  products: Product[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
   };
+}
+
+export interface SingleProductResponse {
+  data: Product;
+}
+
+export interface ProductFormData {
+  name: string;
+  description: string;
+  price: number;
+  stock: number;
+  categoryId: string;
+  images: string[];
 }
