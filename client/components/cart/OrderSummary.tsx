@@ -1,13 +1,15 @@
-// components/cart/OrderSummary.tsx
-
 "use client";
 
+import Link from "next/link";
 import { useCartStore } from "@/store/cartStore";
 
 export default function OrderSummary() {
-  const { subtotal, totalItems } = useCartStore();
+  const { subtotal, totalItems } =
+    useCartStore();
 
-  const shipping = subtotal() > 1000 ? 0 : 99;
+  const shipping =
+    subtotal() > 1000 ? 0 : 99;
+
   const total = subtotal() + shipping;
 
   return (
@@ -18,14 +20,18 @@ export default function OrderSummary() {
 
       <div className="space-y-4">
         <div className="flex justify-between">
-          <span>Items ({totalItems()})</span>
+          <span>
+            Items ({totalItems()})
+          </span>
           <span>₹{subtotal()}</span>
         </div>
 
         <div className="flex justify-between">
           <span>Shipping</span>
           <span>
-            {shipping === 0 ? "FREE" : `₹${shipping}`}
+            {shipping === 0
+              ? "FREE"
+              : `₹${shipping}`}
           </span>
         </div>
 
@@ -36,9 +42,12 @@ export default function OrderSummary() {
           <span>₹{total}</span>
         </div>
 
-        <button className="w-full rounded-lg bg-black py-3 text-white hover:opacity-90">
+        <Link
+          href="/checkout"
+          className="block w-full rounded-lg bg-black py-3 text-center text-white hover:opacity-90"
+        >
           Proceed to Checkout
-        </button>
+        </Link>
       </div>
     </div>
   );

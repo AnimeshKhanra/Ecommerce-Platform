@@ -1,3 +1,8 @@
+import dotenv from "dotenv";
+
+dotenv.config();
+
+
 import app from './app';
 import { logger } from "./config/logger";
 import prisma from "./config/prisma";

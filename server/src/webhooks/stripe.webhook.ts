@@ -97,6 +97,7 @@ async function handleCheckoutSessionCompleted(
  * signature verification.
  */
 const stripeWebhookHandler = asyncHandler(async (req: Request, res: Response) => {
+    console.log("Webhook hit");
     const signature = req.headers["stripe-signature"];
 
     if (!signature) {

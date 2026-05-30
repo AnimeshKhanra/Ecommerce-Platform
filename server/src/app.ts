@@ -12,8 +12,8 @@ const app = express();
 
 
 app.use(cors({
-    origin: process.env.CORS_ORIGIN,
-    credentials: true,
+  origin: process.env.CORS_ORIGIN,
+  credentials: true,
 }));
 
 /*
@@ -21,15 +21,16 @@ app.use(cors({
   MUST come BEFORE express.json()
 */
 app.post(
-  "/api/payments/webhook",
+  "/api/v1/payments/webhook",
   express.raw({ type: "application/json" }),
   stripeWebhookHandler
 );
 
 
 app.use(helmet());
-app.use(express.json({limit: "16kb"}));
-app.use(express.urlencoded({extended: true, limit: "16kb"}))
+app.use(express.json({ limit: "16kb" }));
+// app.use(express.raw());
+app.use(express.urlencoded({ extended: true, limit: "16kb" }))
 app.use(express.static("public"));
 app.use(limiter);
 app.use(cookieParser());
@@ -42,15 +43,19 @@ import productRouter from "./routes/product.routes"
 import categoryRouter from "./routes/category.routes";
 import imageRouter from "./routes/upload.routes";
 import cartRoutes from "./routes/cart.routes";
+import paymentRoutes from "./routes/payment.routes";
+import orderRoutes from "./routes/order.routes";
 
 
 // Router declaration
-app.use("/api/v1/auth", authRouter )
+app.use("/api/v1/auth", authRouter)
 app.use("/api/v1/admin", adminRouter)
 app.use("/api/v1/products", productRouter)
 app.use("/api/v1/categories", categoryRouter)
 app.use("/api/v1/upload", imageRouter)
 app.use("/api/v1/cart", cartRoutes);
+app.use("/api/v1/payments", paymentRoutes);
+app.use("/api/v1/orders", orderRoutes);
 
 
 
