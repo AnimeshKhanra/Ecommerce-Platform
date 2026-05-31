@@ -101,12 +101,23 @@ export default function ProductsPage() {
   // Parsing individual sort variables out of standard string state for sub-components
   const [currentSortBy, currentOrder] = sort.split("-");
 
-  return (
+
+
+return (
+  <div className="min-h-screen bg-slate-50">
     <div className="max-w-7xl mx-auto px-6 py-10">
-      <div className="flex flex-col md:flex-row gap-6">
-        
-        {/* Sidebar Filtering Controls */}
-        <aside className="w-full md:w-64">
+      <div className="mb-10">
+        <h1 className="text-5xl font-bold text-slate-900">
+          Discover Products
+        </h1>
+
+        <p className="mt-3 text-lg text-slate-600">
+          Browse our latest collection with filters and search.
+        </p>
+      </div>
+
+      <div className="flex flex-col lg:flex-row gap-8">
+        <aside className="lg:w-72">
           <FilterSidebar
             categories={categories}
             selectedCategory={selectedCategory}
@@ -121,30 +132,39 @@ export default function ProductsPage() {
           />
         </aside>
 
-        {/* Catalog Main Feed */}
         <main className="flex-1">
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <SearchBar value={search} onChange={(value) => { setSearch(value); setPage(1); }} />
-            
-            <SortDropdown 
-              sortBy={currentSortBy}
-              order={currentOrder as "asc" | "desc"}
-              onSortChange={handleSortChange}
-            />
+          <div className="bg-white rounded-2xl p-4 shadow-sm border mb-6">
+            <div className="flex flex-col md:flex-row gap-4">
+              <SearchBar
+                value={search}
+                onChange={(value) => {
+                  setSearch(value);
+                  setPage(1);
+                }}
+              />
+
+              <SortDropdown
+                sortBy={currentSortBy}
+                order={currentOrder as "asc" | "desc"}
+                onSortChange={handleSortChange}
+              />
+            </div>
           </div>
 
-          {/* Product Cards & Loading States */}
-          <ProductGrid products={products} isLoading={isLoading} />
+          <ProductGrid
+            products={products}
+            isLoading={isLoading}
+          />
 
-          {/* Pagination Controls Footer */}
           <Pagination
             currentPage={page}
             totalPages={totalPages}
             onPageChange={setPage}
           />
         </main>
-
       </div>
     </div>
-  );
+  </div>
+);
+
 }

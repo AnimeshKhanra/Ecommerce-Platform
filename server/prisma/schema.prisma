@@ -13,11 +13,16 @@ model User {
   password     String
   name         String
   role         Role     @default(USER)
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
   refreshToken String?
+
   orders       Order[]
   cart         Cart?
+
+  reviews      Review[]
 }
 
 model Category {
@@ -32,13 +37,20 @@ model Product {
   description String?
   price       Float
   stock       Int         @default(0)
+
   images      String[]
   isActive    Boolean     @default(true)
+
   categoryId  String
+
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+  
   orderItems  OrderItem[]
   cartItems   CartItem[]
+
+  reviews     Review[]
+
   category    Category    @relation(fields: [categoryId], references: [id])
 }
 
@@ -92,6 +104,23 @@ model CartItem {
   product Product @relation(fields: [productId], references: [id])
 
   @@unique([cartId, productId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+
+  rating    Int
+  comment   String?
+
+  userId    String
+  productId String
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
 }
 
 enum Role {
