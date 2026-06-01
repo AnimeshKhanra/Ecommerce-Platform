@@ -11,6 +11,7 @@ import ImageGallery from "@/components/ImageGallery";
 import StockIndicator from "@/components/StockIndicator";
 import AddToCartButton from "@/components/AddToCartButton";
 import RelatedProducts from "@/components/RelatedProducts";
+import ReviewSection from "@/components/reviews/ReviewSection";
 
 export default function ProductDetailPage() {
     const params = useParams();
@@ -90,6 +91,10 @@ export default function ProductDetailPage() {
             <RelatedProducts
                 categoryId={product.categoryId}
                 currentProductId={product.id}
+            />
+            
+            <ReviewSection
+                productId={product.id}
             />
         </div>
     );

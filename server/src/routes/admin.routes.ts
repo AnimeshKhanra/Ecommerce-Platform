@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { adminDashboard } from "../controllers/admin.controller";
+import { getAdminStats  } from "../controllers/admin.controller";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import { adminMiddleware } from "../middlewares/admin.middleware";
 
@@ -10,11 +10,11 @@ const router = Router();
 
 
 router
-    .route("/dashboard")
+    .route("/stats")
     .get(
         authMiddleware,
         adminMiddleware,
-        adminDashboard
+        getAdminStats 
     );
 
 
