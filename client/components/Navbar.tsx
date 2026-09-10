@@ -44,6 +44,9 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const { storeUser, logout } = useAuthStore();
 
+
+  // useee
+
   const handleLogout = async () => {
     await logout();
     setOpen(false);
