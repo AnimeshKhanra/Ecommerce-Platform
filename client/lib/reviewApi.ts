@@ -1,50 +1,29 @@
-import axios from "axios";
+import api from './axios';
 
-const API = axios.create({
-    baseURL:
-        process.env
-            .NEXT_PUBLIC_API_URL,
-});
 
-API.interceptors.request.use(
-    (config) => {
-        const token =
-            localStorage.getItem(
-                "token"
-            );
 
-        if (token) {
-            config.headers.Authorization =
-                `Bearer ${token}`;
-        }
+// api.interceptors.request.use((config) => {
+//   const token = localStorage.getItem('token');
 
-        return config;
-    }
-);
+//   if (token) {
+//     config.headers.Authorization = `Bearer ${token}`;
+//   }
 
-export const getReviews =
-    async (
-        productId: string
-    ) => {
-        const res =
-            await API.get(
-                `/reviews/${productId}`
-            );
+//   return config;
+// });
 
-        return res.data.data;
-    };
+export const getReviews = async (productId: string) => {
+  const res = await api.get(`/reviews/${productId}`);
 
-export const createReview =
-    async (payload: {
-        productId: string;
-        rating: number;
-        comment: string;
-    }) => {
-        const res =
-            await API.post(
-                "/reviews",
-                payload
-            );
+  return res.data.data;
+};
 
-        return res.data.data;
-    };
+export const createReview = async (payload: {
+  productId: string;
+  rating: number;
+  comment: string;
+}) => {
+  const res = await api.post('/reviews', payload);
+
+  return res.data.data;
+};

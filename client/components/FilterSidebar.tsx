@@ -19,6 +19,7 @@ export default function FilterSidebar({
   categories,
   selectedCategory,
   minPrice,
+  
   maxPrice,
   onCategoryChange,
   onPriceChange,

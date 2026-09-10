@@ -10,7 +10,6 @@ export const authMiddleware = asyncHandler (async (
     res: Response,
     next: NextFunction
 ) => {
-
         const authHeader = req.headers.authorization;
     
         if(!authHeader || !authHeader?.startsWith("Bearer ")){
@@ -25,12 +24,14 @@ export const authMiddleware = asyncHandler (async (
         // console.log(process.env.JWT_ACCESS_SECRET!)
         const decodedToken = jwt.verify(
             token,
-            // process.env.JWT_ACCESS_SECRET!,
             process.env.JWT_ACCESS_SECRET as Secret,
         ) as {
             id: string;
             role: string;
         }
+        // console.log(decodedToken)
+        // console.log(decodedToken.id)
+        // console.log(decodedToken.role)
 
         const cachedUser = await getCache<any>(`session:${decodedToken.id}`);
 

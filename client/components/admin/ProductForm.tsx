@@ -7,6 +7,7 @@ import {
   ProductFormData,
 } from "@/types/product.types";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast"
 
 interface ProductFormProps {
   initialData?: ProductFormData;
@@ -49,6 +50,7 @@ export default function ProductForm({
       setCategories(res.data.data);
     } catch (error) {
       console.error(error);
+      toast.error("Operation failed");
     }
   }
 
@@ -92,6 +94,7 @@ export default function ProductForm({
       router.push("/admin/products");
     } catch (error) {
       console.error(error);
+      toast.error("Operation failed");
     } finally {
       setLoading(false);
     }
@@ -114,6 +117,7 @@ export default function ProductForm({
       }));
     } catch (error) {
       console.error(error);
+      toast.error("Operation failed");
     }
   }
 

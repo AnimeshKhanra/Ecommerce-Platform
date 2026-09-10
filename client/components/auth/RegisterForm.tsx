@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAuthStore } from "@/store/auth.store";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast"
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -26,7 +27,7 @@ export default function RegisterForm() {
 
       router.push("/login");
     } catch {
-      alert("Registration failed");
+      toast.error("Registration failed");
     }
   };
 

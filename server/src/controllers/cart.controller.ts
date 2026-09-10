@@ -81,7 +81,7 @@ const addToCart = asyncHandler(async (req: Request, res: Response) => {
 
     const existingItem = await prisma.cartItem.findFirst({
         where: {
-            cartId: cart.id,
+            cartId: cart.id,                                                        
             productId: validated.productId,
         },
     });
@@ -108,8 +108,7 @@ const addToCart = asyncHandler(async (req: Request, res: Response) => {
     return res.status(201).json(new ApiResponse(201, null, 'Item added to cart'));
 });
 
-const updateCartItem = asyncHandler(
-    async (req: Request, res: Response) => {
+const updateCartItem = asyncHandler(async (req: Request, res: Response) => {
         const userId = req.user?.id;
         if (!userId) {
             throw new ApiError(400, 'You are not authorized');
@@ -151,8 +150,7 @@ const updateCartItem = asyncHandler(
     }
 );
 
-const removeCartItem = asyncHandler(
-    async (req: Request, res: Response) => {
+const removeCartItem = asyncHandler(async (req: Request, res: Response) => {
         const userId = req.user?.id;
         if (!userId) {
             throw new ApiError(400, 'You are not authorized');

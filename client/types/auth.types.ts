@@ -1,13 +1,13 @@
 export interface User {
-    id: string;
-    name: string;
-    email: string;
-    role: "USER" | "ADMIN";
+  id: string;
+  name: string;
+  email: string;
+  role: 'USER' | 'ADMIN';
 }
 
 export interface LoginPayload {
-    email: string;
-    password: string;
+  email: string;
+  password: string;
 }
 
 export interface RegisterPayload {

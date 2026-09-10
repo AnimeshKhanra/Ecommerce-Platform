@@ -5,6 +5,7 @@ import api from "@/lib/axios";
 import Link from "next/link";
 import { Product } from "@/types/product.types";
 import ProductTable from "@/components/admin/ProductTable";
+import EmptyState from "@/components/common/EmptyState";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<
@@ -42,6 +43,19 @@ export default function AdminProductsPage() {
       console.error(error);
     }
   }
+
+
+  if (!products.length) {
+    return (
+      <EmptyState
+        title="No Products"
+        description="Start by creating your first product."
+        buttonText="Create Product"
+        buttonLink="/admin/products/create"
+      />
+    );
+  }
+
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-10">

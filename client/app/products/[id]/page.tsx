@@ -1,5 +1,6 @@
 "use client";
 
+import { Metadata } from "next";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import api from "@/lib/axios";
@@ -12,6 +13,42 @@ import StockIndicator from "@/components/StockIndicator";
 import AddToCartButton from "@/components/AddToCartButton";
 import RelatedProducts from "@/components/RelatedProducts";
 import ReviewSection from "@/components/reviews/ReviewSection";
+
+
+interface Props {
+  params: {
+    id: string;
+  };
+}
+
+export async function generateMetadata(
+  { params }: Props
+): Promise<Metadata> {
+
+  const product = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/products/${params.id}`
+  ).then((res) => res.json());
+
+  return {
+    title: product.name,
+
+    description: product.description,
+
+    openGraph: {
+      title: product.name,
+      description: product.description,
+      images: [product.images[0]],
+    },
+  };
+}
+
+
+
+
+
+
+
+
 
 export default function ProductDetailPage() {
     const params = useParams();

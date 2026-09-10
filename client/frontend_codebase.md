@@ -1,95 +1,61 @@
 # Frontend Codebase
 This file contains the consolidated codebase for the client. Excludes node_modules, .next, and media assets.
 
-## File: package.json
-``json
-{
-  "name": "client",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-  },
-  "dependencies": {
-    "@hookform/resolvers": "^5.4.0",
-    "@stripe/stripe-js": "^9.6.0",
-    "axios": "^1.16.0",
-    "lucide-react": "^1.16.0",
-    "next": "16.2.4",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "react-hook-form": "^7.76.1",
-    "react-hot-toast": "^2.6.0",
-    "zod": "^4.4.3",
-    "zustand": "^5.0.13"
-  },
-  "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.4",
-    "tailwindcss": "^4",
-    "typescript": "^5"
-  }
-}
-``
+## File: app\admin\dashboard\page.tsx
+```typescript
+'use client';
 
-## File: tsconfig.json
-``json
-{
-  "compilerOptions": {
-    "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "react-jsx",
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "paths": {
-      "@/*": ["./*"]
+import { useEffect, useState } from 'react';
+import api from '@/lib/axios';
+
+import StatsCard from '@/components/admin/StatsCard';
+import RevenueChart from '@/components/admin/RevenueChart';
+import RecentOrdersTable from '@/components/admin/RecentOrdersTable';
+import LowStockAlert from '@/components/admin/LowStockAlert';
+
+export default function DashboardPage() {
+    const [stats, setStats] = useState<any>();
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            const res = await api.get('/admin/stats');
+
+            setStats(res.data.data);
+        };
+
+        fetchStats();
+    }, []);
+
+    if (!stats) {
+        return <div className="p-8">Loading...</div>;
     }
-  },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    "**/*.mts"
-  ],
-  "exclude": ["node_modules"]
+
+    return (
+        <div className="p-8 space-y-8">
+            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+
+            <div className="grid grid-cols-4 gap-6">
+                <StatsCard title="Sales" value={`₹${stats.totalSales}`} />
+
+                <StatsCard title="Orders" value={stats.totalOrders} />
+
+                <StatsCard title="Users" value={stats.totalUsers} />
+
+                <StatsCard title="Products" value={stats.totalProducts} />
+            </div>
+
+            <RevenueChart data={stats.revenueByMonth} />
+
+            <LowStockAlert products={stats.lowStockProducts} />
+
+            <RecentOrdersTable orders={stats.recentOrders} />
+        </div>
+    );
 }
-``
-
-## File: next.config.ts
-``typescript
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  /* config options here */
-};
-
-export default nextConfig;
-``
+```
 
 ## File: app\admin\orders\page.tsx
-``typescript
+```typescript
 "use client";
 
 import { useEffect, useState } from "react";
@@ -123,10 +89,10 @@ export default function AdminOrdersPage() {
     </div>
   );
 }
-``
+```
 
 ## File: app\admin\products\create\page.tsx
-``typescript
+```typescript
 import ProductForm from "@/components/admin/ProductForm";
 
 export default function CreateProductPage() {
@@ -140,10 +106,10 @@ export default function CreateProductPage() {
     </div>
   );
 }
-``
+```
 
 ## File: app\admin\products\edit\[id]\page.tsx
-``typescript
+```typescript
 "use client";
 
 import { useEffect, useState } from "react";
@@ -223,10 +189,10 @@ export default function EditProductPage() {
     </div>
   );
 }
-``
+```
 
 ## File: app\admin\products\page.tsx
-``typescript
+```typescript
 "use client";
 
 import { useEffect, useState } from "react";
@@ -294,10 +260,10 @@ export default function AdminProductsPage() {
     </div>
   );
 }
-``
+```
 
 ## File: app\cart\page.tsx
-``typescript
+```typescript
 // app/cart/page.tsx
 
 "use client";
@@ -366,10 +332,10 @@ export default function CartPage() {
         </div>
     );
 }
-``
+```
 
 ## File: app\checkout\cancel\page.tsx
-``typescript
+```typescript
 import Link from "next/link";
 
 export default function CancelPage() {
@@ -404,10 +370,10 @@ export default function CancelPage() {
         </div>
     );
 }
-``
+```
 
 ## File: app\checkout\page.tsx
-``typescript
+```typescript
 "use client";
 
 import ShippingForm from "@/components/checkout/ShippingForm";
@@ -483,10 +449,10 @@ export default function CheckoutPage() {
     </div>
   );
 }
-``
+```
 
 ## File: app\checkout\success\page.tsx
-``typescript
+```typescript
 // "use client";
 
 // import { useEffect, useState } from "react";
@@ -680,10 +646,10 @@ export default function SuccessPage() {
     </div>
   );
 }
-``
+```
 
 ## File: app\dashboard\page.tsx
-``typescript
+```typescript
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 export default function DashboardPage() {
@@ -695,43 +661,34 @@ export default function DashboardPage() {
     </ProtectedRoute>
   );
 }
-``
+```
 
 ## File: app\globals.css
-``css
+```css
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  min-height: 100%;
+  background: #f8fafc;
+  color: #0f172a;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
-``
+
+* {
+  box-sizing: border-box;
+}
+```
 
 ## File: app\layout.tsx
-``typescript
+```typescript
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Navbar from "@/components/Navbar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -758,14 +715,21 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <Navbar />
+
+        <main className="flex-1">
+          {children}
+        </main>
+      </body>
+      
     </html>
   );
 }
-``
+```
 
 ## File: app\login\page.tsx
-``typescript
+```typescript
 import LoginForm from "@/components/auth/LoginForm";
 
 export default function LoginPage() {
@@ -777,10 +741,10 @@ export default function LoginPage() {
     </div>
   );
 }
-``
+```
 
 ## File: app\orders\[id]\page.tsx
-``typescript
+```typescript
 "use client";
 
 import { useEffect, useState } from "react";
@@ -852,10 +816,10 @@ export default function OrderDetailPage({
     </div>
   );
 }
-``
+```
 
 ## File: app\orders\page.tsx
-``typescript
+```typescript
 "use client";
 
 import { useEffect, useState } from "react";
@@ -897,79 +861,90 @@ export default function OrdersPage() {
     </div>
   );
 }
-``
+```
 
 ## File: app\page.tsx
-``typescript
-import Image from "next/image";
+```typescript
+// import Image from "next/image";
+
+// export default function Home() {
+//   return (
+//     <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+//       <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
+//         <Image
+//           className="dark:invert"
+//           src="/next.svg"
+//           alt="Next.js logo"
+//           width={100}
+//           height={20}
+//           priority
+//         />
+//         <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
+//           <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
+//             To get started, edit the page.tsx file.
+//           </h1>
+//           <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
+//             Looking for a starting point or more instructions? Head over to{" "}
+//             <a
+//               href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+//               className="font-medium text-zinc-950 dark:text-zinc-50"
+//             >
+//               Templates
+//             </a>{" "}
+//             or the{" "}
+//             <a
+//               href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+//               className="font-medium text-zinc-950 dark:text-zinc-50"
+//             >
+//               Learning
+//             </a>{" "}
+//             center.
+//           </p>
+//         </div>
+//         <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
+//           <a
+//             className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
+//             href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+//             target="_blank"
+//             rel="noopener noreferrer"
+//           >
+//             <Image
+//               className="dark:invert"
+//               src="/vercel.svg"
+//               alt="Vercel logomark"
+//               width={16}
+//               height={16}
+//             />
+//             Deploy Now
+//           </a>
+//           <a
+//             className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
+//             href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+//             target="_blank"
+//             rel="noopener noreferrer"
+//           >
+//             Documentation
+//           </a>
+//         </div>
+//       </main>
+//     </div>
+//   );
+// }
+
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <div className="p-10">
+      <h1 className="text-4xl font-bold">
+        E-Commerce App Working 🚀
+      </h1>
     </div>
   );
 }
-``
+```
 
 ## File: app\products\[id]\page.tsx
-``typescript
+```typescript
 "use client";
 
 import { useEffect, useState } from "react";
@@ -983,6 +958,7 @@ import ImageGallery from "@/components/ImageGallery";
 import StockIndicator from "@/components/StockIndicator";
 import AddToCartButton from "@/components/AddToCartButton";
 import RelatedProducts from "@/components/RelatedProducts";
+import ReviewSection from "@/components/reviews/ReviewSection";
 
 export default function ProductDetailPage() {
     const params = useParams();
@@ -1063,13 +1039,17 @@ export default function ProductDetailPage() {
                 categoryId={product.categoryId}
                 currentProductId={product.id}
             />
+            
+            <ReviewSection
+                productId={product.id}
+            />
         </div>
     );
 }
-``
+```
 
 ## File: app\products\page.tsx
-``typescript
+```typescript
 "use client";
 
 import { useEffect, useState } from "react";
@@ -1173,12 +1153,23 @@ export default function ProductsPage() {
   // Parsing individual sort variables out of standard string state for sub-components
   const [currentSortBy, currentOrder] = sort.split("-");
 
-  return (
+
+
+return (
+  <div className="min-h-screen bg-slate-50">
     <div className="max-w-7xl mx-auto px-6 py-10">
-      <div className="flex flex-col md:flex-row gap-6">
-        
-        {/* Sidebar Filtering Controls */}
-        <aside className="w-full md:w-64">
+      <div className="mb-10">
+        <h1 className="text-5xl font-bold text-slate-900">
+          Discover Products
+        </h1>
+
+        <p className="mt-3 text-lg text-slate-600">
+          Browse our latest collection with filters and search.
+        </p>
+      </div>
+
+      <div className="flex flex-col lg:flex-row gap-8">
+        <aside className="lg:w-72">
           <FilterSidebar
             categories={categories}
             selectedCategory={selectedCategory}
@@ -1193,37 +1184,46 @@ export default function ProductsPage() {
           />
         </aside>
 
-        {/* Catalog Main Feed */}
         <main className="flex-1">
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <SearchBar value={search} onChange={(value) => { setSearch(value); setPage(1); }} />
-            
-            <SortDropdown 
-              sortBy={currentSortBy}
-              order={currentOrder as "asc" | "desc"}
-              onSortChange={handleSortChange}
-            />
+          <div className="bg-white rounded-2xl p-4 shadow-sm border mb-6">
+            <div className="flex flex-col md:flex-row gap-4">
+              <SearchBar
+                value={search}
+                onChange={(value) => {
+                  setSearch(value);
+                  setPage(1);
+                }}
+              />
+
+              <SortDropdown
+                sortBy={currentSortBy}
+                order={currentOrder as "asc" | "desc"}
+                onSortChange={handleSortChange}
+              />
+            </div>
           </div>
 
-          {/* Product Cards & Loading States */}
-          <ProductGrid products={products} isLoading={isLoading} />
+          <ProductGrid
+            products={products}
+            isLoading={isLoading}
+          />
 
-          {/* Pagination Controls Footer */}
           <Pagination
             currentPage={page}
             totalPages={totalPages}
             onPageChange={setPage}
           />
         </main>
-
       </div>
     </div>
-  );
+  </div>
+);
+
 }
-``
+```
 
 ## File: app\register\page.tsx
-``typescript
+```typescript
 import RegisterForm from "@/components/auth/RegisterForm";
 
 export default function RegisterPage() {
@@ -1235,10 +1235,10 @@ export default function RegisterPage() {
     </div>
   );
 }
-``
+```
 
 ## File: app\test-products\page.tsx
-``typescript
+```typescript
 "use client";
 
 import { useState } from "react";
@@ -1386,10 +1386,10 @@ export default function TestProductsPage() {
         </div>
     );
 }
-``
+```
 
 ## File: components\AddToCartButton.tsx
-``typescript
+```typescript
 "use client";
 
 import { ShoppingCart } from "lucide-react";
@@ -1419,10 +1419,35 @@ export default function AddToCartButton({
         </button>
     );
 }
-``
+```
+
+## File: components\admin\LowStockAlert.tsx
+```typescript
+export default function LowStockAlert({ products }: { products: any[] }) {
+  return (
+    <div className="bg-red-50 border border-red-300 rounded-xl p-5">
+      <h2 className="font-bold text-red-600 mb-4">Low Stock Alerts</h2>
+
+      {products.length === 0 ? (
+        <p>No low stock items.</p>
+      ) : (
+        <ul className="space-y-2">
+          {products.map((product) => (
+            <li key={product.id}>
+              {product.name}
+              {' - '}
+              {product.stock} left
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+```
 
 ## File: components\admin\ProductForm.tsx
-``typescript
+```typescript
 "use client";
 
 import { useEffect, useState } from "react";
@@ -1660,10 +1685,10 @@ export default function ProductForm({
     </form>
   );
 }
-``
+```
 
 ## File: components\admin\ProductTable.tsx
-``typescript
+```typescript
 "use client";
 
 import Link from "next/link";
@@ -1737,10 +1762,109 @@ export default function ProductTable({
     </div>
   );
 }
-``
+```
+
+## File: components\admin\RecentOrdersTable.tsx
+```typescript
+export default function RecentOrdersTable({ orders }: { orders: any[] }) {
+    return (
+        <div className="bg-white rounded-xl shadow p-5">
+            <h2 className="font-bold text-lg mb-4">Recent Orders</h2>
+
+            <table className="w-full">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {orders.map((order) => (
+                        <tr key={order.id}>
+                            <td>{order.id.slice(0, 8)}</td>
+
+                            <td>{order.user.name}</td>
+
+                            <td>₹{order.totalAmount}</td>
+
+                            <td>{order.status}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+}
+```
+
+## File: components\admin\RevenueChart.tsx
+```typescript
+'use client';
+
+import {
+    ResponsiveContainer,
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    Tooltip,
+} from 'recharts';
+
+export default function RevenueChart({ data }: { data: any[] }) {
+    const chartData = data.map((item) => ({
+        date: new Date(item.createdAt).toLocaleDateString(),
+        revenue: item._sum.totalAmount,
+    }));
+
+    return (
+        <div className="bg-white rounded-xl shadow p-5">
+            <h2 className="font-bold text-lg mb-4">Revenue</h2>
+
+            <ResponsiveContainer width="100%" height={350}>
+                <LineChart data={chartData}>
+                    <XAxis dataKey="date" />
+                    <YAxis />
+
+                    <Tooltip />
+
+                    <Line type="monotone" dataKey="revenue" stroke="#2563eb" />
+                </LineChart>
+            </ResponsiveContainer>
+        </div>
+    );
+}
+```
+
+## File: components\admin\StatsCard.tsx
+```typescript
+interface Props {
+    title: string;
+    value: string | number;
+}
+
+export default function StatsCard({
+    title,
+    value,
+}: Props) {
+    return (
+        <div className="bg-white rounded-xl shadow p-6">
+            <h3 className="text-gray-500 text-sm">
+                {title}
+            </h3>
+
+            <p className="text-3xl font-bold mt-2">
+                {value}
+            </p>
+        </div>
+    );
+}
+```
 
 ## File: components\auth\LoginForm.tsx
-``typescript
+```typescript
 "use client";
 
 import { useState } from "react";
@@ -1801,10 +1925,10 @@ export default function LoginForm() {
     </form>
   );
 }
-``
+```
 
 ## File: components\auth\ProtectedRoute.tsx
-``typescript
+```typescript
 "use client";
 
 import { useEffect } from "react";
@@ -1830,10 +1954,10 @@ export default function ProtectedRoute({
 
   return <>{children}</>;
 }
-``
+```
 
 ## File: components\auth\RegisterForm.tsx
-``typescript
+```typescript
 "use client";
 
 import { useState } from "react";
@@ -1908,10 +2032,10 @@ export default function RegisterForm() {
     </form>
   );
 }
-``
+```
 
 ## File: components\cart\CartItem.tsx
-``typescript
+```typescript
 // components/cart/CartItem.tsx
 
 "use client";
@@ -1986,10 +2110,10 @@ export default function CartItem({ item }: CartItemProps) {
     </div>
   );
 }
-``
+```
 
 ## File: components\cart\OrderSummary.tsx
-``typescript
+```typescript
 "use client";
 
 import Link from "next/link";
@@ -2044,10 +2168,10 @@ export default function OrderSummary() {
     </div>
   );
 }
-``
+```
 
 ## File: components\checkout\ShippingForm.tsx
-``typescript
+```typescript
 "use client";
 
 import { useState } from "react";
@@ -2245,10 +2369,10 @@ export default function ShippingForm() {
     </form>
   );
 }
-``
+```
 
 ## File: components\FilterSidebar.tsx
-``typescript
+```typescript
 'use client';
 
 import { Category } from '@/types/product.types';
@@ -2361,10 +2485,10 @@ export default function FilterSidebar({
     </aside>
   );
 }
-``
+```
 
 ## File: components\ImageGallery.tsx
-``typescript
+```typescript
 "use client";
 
 import { useState } from "react";
@@ -2417,10 +2541,36 @@ export default function ImageGallery({
     </div>
   );
 }
-``
+```
+
+## File: components\Navbar.tsx
+```typescript
+import Link from "next/link";
+
+export default function Navbar() {
+  return (
+    <header className="bg-white border-b shadow-sm">
+      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <Link
+          href="/"
+          className="text-2xl font-bold text-indigo-600"
+        >
+          ECOM
+        </Link>
+
+        <nav className="flex gap-6">
+          <Link href="/products">Products</Link>
+          <Link href="/cart">Cart</Link>
+          <Link href="/orders">Orders</Link>
+        </nav>
+      </div>
+    </header>
+  );
+}
+```
 
 ## File: components\orders\AdminOrderTable.tsx
-``typescript
+```typescript
 "use client";
 
 import api from "@/lib/axios";
@@ -2502,10 +2652,10 @@ export default function AdminOrderTable({
     </table>
   );
 }
-``
+```
 
 ## File: components\orders\OrderCard.tsx
-``typescript
+```typescript
 "use client";
 
 import Link from "next/link";
@@ -2544,10 +2694,10 @@ export default function OrderCard({ order }: Props) {
     </div>
   );
 }
-``
+```
 
 ## File: components\orders\OrderItem.tsx
-``typescript
+```typescript
 import { OrderItem as Item } from "@/types/order";
 
 interface Props {
@@ -2575,10 +2725,10 @@ export default function OrderItem({ item }: Props) {
     </div>
   );
 }
-``
+```
 
 ## File: components\orders\OrderStatusBadge.tsx
-``typescript
+```typescript
 interface Props {
   status: string;
 }
@@ -2600,10 +2750,10 @@ export default function OrderStatusBadge({ status }: Props) {
     </span>
   );
 }
-``
+```
 
 ## File: components\Pagination.tsx
-``typescript
+```typescript
 'use client';
 
 import {
@@ -2664,10 +2814,10 @@ export default function Pagination({
         </div>
     );
 }
-``
+```
 
 ## File: components\ProductCard.tsx
-``typescript
+```typescript
 'use client';
 
 import Link from "next/link";
@@ -2688,48 +2838,61 @@ export default function ProductCard({
 
   return (
     <Link href={`/products/${product.id}`}>
-    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition">
-      <div className="relative w-full aspect-square">
-        <Image
-          src={productImage}
-          alt={product.name}
-          fill
-          className="object-cover"
-        />
-      </div>
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition">
+        {/* <div className="bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300"> */}
+        <div className="relative w-full aspect-square">
+          <Image
+            src={productImage}
+            alt={product.name}
+            fill
+            className="object-cover"
+          />
+        </div>
 
-      <div className="p-5">
-        <p className="text-xs uppercase text-indigo-600 font-semibold mb-2">
-          {product.category?.name}
-        </p>
+        <div className="p-5">
+          <p className="text-xs uppercase text-indigo-600 font-semibold mb-2">
+            {product.category?.name}
+          </p>
 
-        <h3 className="text-lg font-bold text-slate-900 line-clamp-1">
+          {/* <h3 className="text-lg font-bold text-slate-900 line-clamp-1">
           {product.name}
         </h3>
 
         <p className="text-sm text-slate-500 mt-2 line-clamp-2">
           {product.description}
-        </p>
+        </p> */}
 
-        <div className="flex items-center justify-between mt-5">
-          <span className="text-xl font-bold">
-            ₹{product.price}
-          </span>
+          <h3 className="text-xl font-bold text-slate-900">
+            {product.name}
+          </h3>
 
-          <button className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
-            <ShoppingBag className="w-4 h-4" />
-            Add
-          </button>
+          <p className="text-slate-500 mt-2 text-sm">
+            {product.description}
+          </p>
+
+          <div className="flex items-center justify-between mt-5">
+            {/* <span className="text-xl font-bold">
+              ₹{product.price}
+            </span> */}
+
+            <span className="text-2xl font-bold text-indigo-600">
+              ₹{product.price}
+            </span>
+
+            <button className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
+              <ShoppingBag className="w-4 h-4" />
+              Add
+            </button>
+          </div>
         </div>
       </div>
-    </div>
     </Link>
   );
 }
-``
+```
 
 ## File: components\ProductGrid.tsx
-``typescript
+```typescript
 'use client';
 
 import ProductCard from './ProductCard';
@@ -2780,10 +2943,10 @@ export default function ProductGrid({
     </div>
   );
 }
-``
+```
 
 ## File: components\RelatedProducts.tsx
-``typescript
+```typescript
 "use client";
 
 import { useEffect, useState } from "react";
@@ -2840,10 +3003,159 @@ export default function RelatedProducts({
         </section>
     );
 }
-``
+```
+
+## File: components\reviews\ReviewForm.tsx
+```typescript
+'use client';
+
+import { useState } from 'react';
+
+import { createReview } from '@/lib/reviewApi';
+
+export default function ReviewForm({ productId, refresh }: any) {
+    const [rating, setRating] = useState(5);
+
+    const [comment, setComment] = useState('');
+
+    const submit = async () => {
+        await createReview({
+            productId,
+            rating,
+            comment,
+        });
+
+        setComment('');
+
+        refresh();
+    };
+
+    return (
+        <div className="border rounded-xl p-5">
+            <h3 className="font-bold mb-3">Write Review</h3>
+
+            <select
+                value={rating}
+                onChange={(e) => setRating(Number(e.target.value))}
+                className="border p-2 rounded"
+            >
+                <option value={5}>5 Stars</option>
+                <option value={4}>4 Stars</option>
+                <option value={3}>3 Stars</option>
+                <option value={2}>2 Stars</option>
+                <option value={1}>1 Star</option>
+            </select>
+
+            <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                className="w-full border p-3 rounded mt-3"
+            />
+
+            <button
+                onClick={submit}
+                className="bg-indigo-600 text-white px-5 py-2 rounded mt-3"
+            >
+                Submit Review
+            </button>
+        </div>
+    );
+}
+```
+
+## File: components\reviews\ReviewSection.tsx
+```typescript
+'use client';
+
+import { useEffect, useState } from 'react';
+
+import { getReviews } from '@/lib/reviewApi';
+
+import StarRating from './StarRating';
+
+import ReviewForm from './ReviewForm';
+
+export default function ReviewSection({ productId }: { productId: string }) {
+  const [data, setData] = useState<any>(null);
+
+  const load = async () => {
+    const reviews = await getReviews(productId);
+
+    setData(reviews);
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  if (!data) return null;
+
+  return (
+    <section className="mt-16">
+      <h2 className="text-3xl font-bold mb-6">Reviews</h2>
+
+      <div className="mb-6">
+        <div className="text-4xl font-bold">{data.avgRating.toFixed(1)}</div>
+
+        <StarRating rating={Math.round(data.avgRating)} />
+
+        <p>{data.totalReviews} Reviews</p>
+      </div>
+
+      <ReviewForm productId={productId} refresh={load} />
+
+      <div className="mt-8 space-y-4">
+        {data.reviews.map((review: any) => (
+          <div key={review.id} className="border rounded-xl p-4">
+            <div className="flex justify-between">
+              <h4 className="font-semibold">{review.user.name}</h4>
+
+              <StarRating rating={review.rating} />
+            </div>
+
+            <p className="mt-2 text-gray-600">{review.comment}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+```
+
+## File: components\reviews\StarRating.tsx
+```typescript
+"use client";
+
+interface Props {
+  rating: number;
+}
+
+export default function StarRating({
+  rating,
+}: Props) {
+  return (
+    <div className="flex gap-1">
+      {[1,2,3,4,5].map(
+        (star) => (
+          <span
+            key={star}
+            className={
+              star <= rating
+                ? "text-yellow-500"
+                : "text-gray-300"
+            }
+          >
+            ★
+          </span>
+        )
+      )}
+    </div>
+  );
+}
+```
 
 ## File: components\SearchBar.tsx
-``typescript
+```typescript
 'use client';
 
 import { Search, X } from 'lucide-react';
@@ -2880,10 +3192,10 @@ export default function SearchBar({
         </div>
     );
 }
-``
+```
 
 ## File: components\SortDropdown.tsx
-``typescript
+```typescript
 'use client';
 
 import { ArrowUpDown } from 'lucide-react';
@@ -2941,10 +3253,10 @@ export default function SortDropdown({
     </div>
   );
 }
-``
+```
 
 ## File: components\StockIndicator.tsx
-``typescript
+```typescript
 interface StockIndicatorProps {
     stock: number;
 }
@@ -2974,10 +3286,10 @@ export default function StockIndicator({
         </span>
     );
 }
-``
+```
 
 ## File: hooks\useDebounce.ts
-``typescript
+```typescript
 "use client";
 
 import { useEffect, useState } from "react";
@@ -2995,10 +3307,10 @@ export function useDebounce<T>(value: T, delay = 500) {
 
     return debouncedValue;
 }
-``
+```
 
 ## File: lib\axios.ts
-``typescript
+```typescript
 import axios from "axios";
 
 const api = axios.create({
@@ -3101,10 +3413,10 @@ export default api;
 // );
 
 // export default api;
-``
+```
 
 ## File: lib\cartApi.ts
-``typescript
+```typescript
 // // lib/cartApi.ts
 
 // import axios from "axios";
@@ -3231,10 +3543,10 @@ export const syncCartApi = async (
     );
   }
 };
-``
+```
 
 ## File: lib\paymentApi.ts
-``typescript
+```typescript
 import axios from "axios";
 
 const paymentAPI = axios.create({
@@ -3277,10 +3589,114 @@ export const getLatestOrder =
 
     return res.data.data;
   };
-``
+```
+
+## File: lib\reviewApi.ts
+```typescript
+import axios from "axios";
+
+const API = axios.create({
+    baseURL:
+        process.env
+            .NEXT_PUBLIC_API_URL,
+});
+
+API.interceptors.request.use(
+    (config) => {
+        const token =
+            localStorage.getItem(
+                "token"
+            );
+
+        if (token) {
+            config.headers.Authorization =
+                `Bearer ${token}`;
+        }
+
+        return config;
+    }
+);
+
+export const getReviews =
+    async (
+        productId: string
+    ) => {
+        const res =
+            await API.get(
+                `/reviews/${productId}`
+            );
+
+        return res.data.data;
+    };
+
+export const createReview =
+    async (payload: {
+        productId: string;
+        rating: number;
+        comment: string;
+    }) => {
+        const res =
+            await API.post(
+                "/reviews",
+                payload
+            );
+
+        return res.data.data;
+    };
+```
+
+## File: next.config.ts
+```typescript
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  /* config options here */
+};
+
+export default nextConfig;
+```
+
+## File: package.json
+```json
+{
+  "name": "client",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.4.0",
+    "@stripe/stripe-js": "^9.6.0",
+    "axios": "^1.16.0",
+    "lucide-react": "^1.16.0",
+    "next": "16.2.4",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-hook-form": "^7.76.1",
+    "react-hot-toast": "^2.6.0",
+    "recharts": "^3.8.1",
+    "zod": "^4.4.3",
+    "zustand": "^5.0.13"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.4",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
+```
 
 ## File: store\auth.store.ts
-``typescript
+```typescript
 import { create } from "zustand";
 import api from "@/lib/axios";
 import {
@@ -3345,10 +3761,10 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   
 }));
-``
+```
 
 ## File: store\cartStore.ts
-``typescript
+```typescript
 // store/cartStore.ts
 
 "use client";
@@ -3511,10 +3927,70 @@ export const useCartStore = create<CartState>((set, get) => ({
     );
   },
 }));
-``
+```
+
+## File: tsconfig.json
+```json
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": ["node_modules"]
+}
+```
+
+## File: types\admin.ts
+```typescript
+export interface DashboardStats {
+  totalUsers: number;
+  totalProducts: number;
+  totalOrders: number;
+  totalSales: number;
+  revenueByMonth: {
+    createdAt: string;
+    _sum: {
+      totalAmount: number;
+    };
+  }[];
+  lowStockProducts: {
+    id: string;
+    name: string;
+    stock: number;
+  }[];
+  recentOrders: any[];
+}
+```
 
 ## File: types\auth.types.ts
-``typescript
+```typescript
 export interface User {
     id: string;
     name: string;
@@ -3537,10 +4013,10 @@ export interface LoginResponse {
   user: User;
   accessToken: string;
 }
-``
+```
 
 ## File: types\order.ts
-``typescript
+```typescript
 export interface OrderItem {
   id: string;
   productId: string;
@@ -3567,7 +4043,7 @@ export interface Order {
   shippingAddress: ShippingAddress;
   orderItems: OrderItem[];
 }
-``
+```
 
 ## File: types\product.types.ts
 ```typescript
@@ -3612,6 +4088,21 @@ export interface ProductFormData {
   stock: number;
   categoryId: string;
   images: string[];
+}
+```
+
+## File: types\review.ts
+```typescript
+export interface Review {
+    id: string;
+    rating: number;
+    comment?: string;
+
+    createdAt: string;
+
+    user: {
+        name: string;
+    };
 }
 ```
 

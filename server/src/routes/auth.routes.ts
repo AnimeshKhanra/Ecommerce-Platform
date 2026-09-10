@@ -10,29 +10,23 @@ import { authMiddleware } from "../middlewares/auth.middleware";
 
 import { validateBody } from "../middlewares/validateBody";
 import { loginSchema, refreshSchema, registerSchema } from "../schemas/auth.schema";
+import { authLimiter } from "../middlewares/rateLimit.middleware";
 
 
 
 const router = Router();
 
-router.route("/register").post(validateBody(registerSchema), register);
-// router.route("/register").post(register);
+// router.use(authLimiter);
 
-router.route("/login").post(validateBody(loginSchema), login);
-// router.route("/login").post(login);
+router.route("/register").post(authLimiter, validateBody(registerSchema), register);
 
-router.route("/refresh-token").post(validateBody(refreshSchema), refreshAccessToken);
-// router.route("/refresh-token").post(refreshAccessToken);
+router.route("/login").post(authLimiter, validateBody(loginSchema), login);
+
+router.route("/refresh-token").post(authLimiter, validateBody(refreshSchema), refreshAccessToken);
+
 
 router.route("/logout").post(authMiddleware, logout);
 
 
-// router
-//     .route("/admin/dashboard")
-//     .get(
-//         authMiddleware,
-//         adminMiddleware,
-//         adminDashboard
-//     );
 
 export default router;

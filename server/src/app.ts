@@ -1,16 +1,21 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import compression from "compression";
 import cookieParser from "cookie-parser";
+
+import { requestLogger } from "./middlewares/requestLogger";
+import { responseTimeLogger } from "./middlewares/responseTime";
+
 import { errorHandler } from './middlewares/errorHandler.middleware';
-import { limiter } from './middlewares/rateLimiter.middleware';
+// import { authLimiter } from './middlewares/rateLimit.middleware';
 import { stripeWebhookHandler } from "./webhooks/stripe.webhook";
 
 
 
 const app = express();
 
-
+// Cross Origin Resource Sharing
 app.use(cors({
   origin: process.env.CORS_ORIGIN,
   credentials: true,
@@ -20,6 +25,7 @@ app.use(cors({
   STRIPE WEBHOOK ROUTE
   MUST come BEFORE express.json()
 */
+
 app.post(
   "/api/v1/payments/webhook",
   express.raw({ type: "application/json" }),
@@ -28,11 +34,18 @@ app.post(
 
 
 app.use(helmet());
+app.use(compression());
 app.use(express.json({ limit: "16kb" }));
-// app.use(express.raw());
+
+if (process.env.NODE_ENV === "development") {
+  app.use(requestLogger);
+}
+app.use(responseTimeLogger);
+
+
 app.use(express.urlencoded({ extended: true, limit: "16kb" }))
 app.use(express.static("public"));
-app.use(limiter);
+// app.use(authLimiter);
 app.use(cookieParser());
 
 

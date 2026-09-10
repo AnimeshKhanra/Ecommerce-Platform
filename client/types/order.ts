@@ -16,10 +16,13 @@ export interface ShippingAddress {
   zipCode: string;
 }
 
+type orderStatus = "PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+
 export interface Order {
   id: string;
   totalAmount: number;
-  status: "PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+  status: orderStatus;
+  // status: "PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
   createdAt: string;
   shippingAddress: ShippingAddress;
   orderItems: OrderItem[];

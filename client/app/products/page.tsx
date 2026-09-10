@@ -100,7 +100,25 @@ export default function ProductsPage() {
 
   // Parsing individual sort variables out of standard string state for sub-components
   const [currentSortBy, currentOrder] = sort.split("-");
+  
 
+if (isLoading) {
+  return (
+    <div className="max-w-7xl mx-auto px-6 py-10">
+      <div className="grid md:grid-cols-2 gap-10">
+        <div className="h-[500px] bg-slate-200 animate-pulse rounded-2xl" />
+
+        <div className="space-y-4">
+          <div className="h-6 w-32 bg-slate-200 rounded" />
+          <div className="h-10 w-full bg-slate-200 rounded" />
+          <div className="h-24 w-full bg-slate-200 rounded" />
+          <div className="h-10 w-40 bg-slate-200 rounded" />
+          <div className="h-12 w-full bg-slate-200 rounded-xl" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 
 return (

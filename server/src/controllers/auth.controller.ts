@@ -10,7 +10,6 @@ import {
 } from '../utils/generateTokens';
 
 
-
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../config/prisma';
@@ -18,17 +17,11 @@ import prisma from '../config/prisma';
 
 
 
-
-
-
-
 const register = asyncHandler(async (req: Request, res: Response) => {
-    // const validatedData = registerSchema.parse(req.body);
-    // const validatedData = req.body;   // OR,
+
     const { name, email, password } = req.body;
 
     const existingUser = await prisma.user.findUnique({
-        // where: { email: validatedData.email },
         where: { email },
     });
 
@@ -64,16 +57,13 @@ const register = asyncHandler(async (req: Request, res: Response) => {
 });
 
 const login = asyncHandler(async (req: Request, res: Response) => {
-    // const { email, password } = loginSchema.parse(req.body);
-    const validatedData = req.body
+
     const { email, password } = req.body;
 
-    // console.log(validatedData);
     const user = await prisma.user.findUnique({
-        // where: { email: validatedData.email },
         where: { email },
     });
-    // console.log(user)
+
 
     if (!user) {
         logger.warn(`Login failed (user not found): ${email}`);
@@ -111,7 +101,7 @@ const login = asyncHandler(async (req: Request, res: Response) => {
             role: true,
         }
     });
-    // console.log(updatedUser)
+    // console.log(updatedUser);
 
     await setCache(
         `session:${user.id}`,
@@ -184,7 +174,7 @@ const refreshAccessToken = asyncHandler(async (req: Request, res: Response) => {
 const logout = asyncHandler(async (req: Request, res: Response) => {
 
     const userId = req.user?.id;
-    console.log(userId);
+    // console.log(userId);
 
     if (!userId) throw new ApiError(401, "Unauthorized");
 
@@ -206,8 +196,6 @@ const logout = asyncHandler(async (req: Request, res: Response) => {
         .status(200)
         .json(new ApiResponse(200, {}, 'Logged out successfully'));
 });
-
-
 
 
 

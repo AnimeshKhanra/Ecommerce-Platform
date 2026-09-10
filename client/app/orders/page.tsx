@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import api from "@/lib/axios";
 import { Order } from "@/types/order";
 import OrderCard from "@/components/orders/OrderCard";
+import EmptyState from "@/components/common/EmptyState";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -21,6 +22,22 @@ export default function OrdersPage() {
       console.error(error);
     }
   };
+
+
+
+  if (!orders.length) {
+    return (
+      <div className="max-w-6xl mx-auto p-6">
+        <EmptyState
+          title="No Orders Yet"
+          description="You haven't placed any orders."
+          buttonText="Shop Now"
+          buttonLink="/products"
+        />
+      </div>
+    );
+  }
+
 
   return (
     <div className="max-w-6xl mx-auto p-6">

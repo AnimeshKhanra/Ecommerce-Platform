@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { z } from "zod";
 import { createCheckoutSession } from "@/lib/paymentApi";
+import toast from "react-hot-toast"
 
 const shippingSchema = z.object({
   fullName: z.string().min(2, "Full name required"),
@@ -59,7 +60,7 @@ export default function ShippingForm() {
       window.location.href = res.url;
     } catch (error) {
       console.error(error);
-      alert("Checkout failed");
+      toast.error("Checkout failed");
     } finally {
       setLoading(false);
     }

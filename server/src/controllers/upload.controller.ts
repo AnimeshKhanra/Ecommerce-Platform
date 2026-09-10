@@ -4,7 +4,9 @@ import { ApiError } from '../utils/ApiError';
 import { ApiResponse } from '../utils/ApiResponse';
 import { fileSchema } from '../schemas/upload.schema';
 import cloudinary from '../config/cloudinary';
-// import { uploadOnCloudinary } from "../utils/uploadOnCloudinary";
+
+let imageUrl;
+
 
 const uploadImage = asyncHandler(async (req: Request, res: Response) => {
     if (!req.file) {
@@ -24,6 +26,8 @@ const uploadImage = asyncHandler(async (req: Request, res: Response) => {
         folder: 'ecommerce-products',
     });
 
+    imageUrl = result.secure_url;
+
     return res.status(200).json(
         new ApiResponse(
             200,
@@ -35,5 +39,7 @@ const uploadImage = asyncHandler(async (req: Request, res: Response) => {
         )
     );
 });
+
+export default imageUrl;
 
 export { uploadImage };

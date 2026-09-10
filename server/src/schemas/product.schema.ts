@@ -26,6 +26,8 @@ export const productSchema = z.object({
         .min(1, 'Category is required'),
 });
 
+
+
 export const updateProductSchema =
     productSchema.partial();
 

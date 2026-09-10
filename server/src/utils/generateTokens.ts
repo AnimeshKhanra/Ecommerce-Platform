@@ -1,31 +1,43 @@
 import jwt, { Secret, SignOptions } from 'jsonwebtoken';
 
-// const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET!;
-// const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET as Secret;
+const ACCESS_SECRET: Secret = process.env.JWT_ACCESS_SECRET as Secret;
+const REFRESH_SECRET: Secret = process.env.JWT_REFRESH_SECRET as Secret;
 
 const ACCESS_TOKEN_EXPIRES = (process.env.ACCESS_TOKEN_EXPIRES ||
     '15m') as SignOptions['expiresIn'];
-
 const REFRESH_TOKEN_EXPIRES = (process.env.REFRESH_TOKEN_EXPIRES ||
     '7d') as SignOptions['expiresIn'];
 
 
+if (!ACCESS_SECRET) {
+  throw new Error('JWT_ACCESS_SECRET is not defined');
+}
 
-export const generateAccessToken = (payload: object): string => {
-    
+if (!REFRESH_SECRET) {
+  throw new Error('JWT_REFRESH_SECRET is not defined');
+}
+
+interface JwtPayload {
+  id: string;
+  role?: 'USER' | 'ADMIN';
+}
+
+
+
+export const generateAccessToken = (payload: JwtPayload): string => {
     return jwt.sign(
         payload, 
-        process.env.JWT_ACCESS_SECRET!, 
+        ACCESS_SECRET, 
         {
             expiresIn: ACCESS_TOKEN_EXPIRES,
         }
     );
 };
 
-export const generateRefreshToken = (payload: object): string => {
+export const generateRefreshToken = (payload: JwtPayload): string => {
     return jwt.sign(
         payload, 
-        process.env.JWT_REFRESH_SECRET!, 
+        REFRESH_SECRET, 
         {
             expiresIn: REFRESH_TOKEN_EXPIRES,
         }

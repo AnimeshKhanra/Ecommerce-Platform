@@ -1,14 +1,9 @@
-import { create } from "zustand";
-import api from "@/lib/axios";
-import {
-  LoginPayload,
-  RegisterPayload,
-  User,
-} from "@/types/auth.types";
-
+import { create } from 'zustand';
+import api from '@/lib/axios';
+import { LoginPayload, RegisterPayload, User } from '@/types/auth.types';
 
 interface AuthState {
-  user: User | null;
+  storeUser: User | null;
   token: string | null;
   loading: boolean;
 
@@ -19,7 +14,7 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
+  storeUser: null,
   token: null,
   loading: false,
 
@@ -29,10 +24,12 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ loading: true });
 
     try {
-      const res = await api.post("/auth/login", data);
-
+      const res = await api.post('/auth/login', data);
+      // console.log(typeof res.data.data.user);
+      // console.log(res.data.data.user);
+      // console.log(JSON.stringify(res.data.data.user));
       set({
-        user: res.data.data.user || null, // Ensure backend passes user data if needed
+        storeUser: res.data.data.user || null, // Ensure backend passes user data if needed
         token: res.data.data.accessToken,
       });
     } finally {
@@ -44,7 +41,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ loading: true });
 
     try {
-      await api.post("/auth/register", data);
+      await api.post('/auth/register', data);
     } finally {
       set({ loading: false });
     }
@@ -52,13 +49,12 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: async () => {
     try {
-      await api.post("/auth/logout");
+      await api.post('/auth/logout');
     } catch {}
 
     set({
-      user: null,
+      storeUser: null,
       token: null,
     });
   },
-  
 }));

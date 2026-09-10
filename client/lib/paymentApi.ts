@@ -1,28 +1,29 @@
-import axios from "axios";
+import api from "./axios";
+// import axios from "axios";
 
-const paymentAPI = axios.create({
-  baseURL:
-    process.env.NEXT_PUBLIC_API_URL ||
-    "http://localhost:5000/api/v1",
-});
+// const paymentAPI = axios.create({
+//   baseURL:
+//     process.env.NEXT_PUBLIC_API_URL ||
+//     "http://localhost:5000/api/v1",
+// });
 
-paymentAPI.interceptors.request.use(
-  (config) => {
-    const token =
-      localStorage.getItem("token");
+// api.interceptors.request.use(
+//   (config) => {
+//     const token =
+//       localStorage.getItem("token");
 
-    if (token) {
-      config.headers.Authorization =
-        `Bearer ${token}`;
-    }
+//     if (token) {
+//       config.headers.Authorization =
+//         `Bearer ${token}`;
+//     }
 
-    return config;
-  }
-);
+//     return config;
+//   }
+// );
 
 export const createCheckoutSession =
   async (shippingAddress: any) => {
-    const res = await paymentAPI.post(
+    const res = await api.post(
       "/payments/checkout",
       {
         shippingAddress,
@@ -34,7 +35,7 @@ export const createCheckoutSession =
 
 export const getLatestOrder =
   async () => {
-    const res = await paymentAPI.get(
+    const res = await api.get(
       "/payments/latest-order"
     );
 

@@ -114,29 +114,29 @@ const deleteProduct = asyncHandler(async (req: Request, res: Response) => {
 const getAllProducts = asyncHandler(async (req: Request, res: Response) => {
     // ── Query params ──────────────────────────────────────────
     const {
-        search    = '',
+        search = '',
         category,
         minPrice,
         maxPrice,
-        sortBy    = 'createdAt',   // createdAt | price | name
-        order     = 'desc',        // asc | desc
-        page      = '1',
-        limit     = '10',
+        sortBy = 'createdAt',   // createdAt | price | name
+        order = 'desc',        // asc | desc
+        page = '1',
+        limit = '10',
     } = req.query as Record<string, string>;
 
     // const cacheKey = `products:${JSON.stringify(req.query)}`
     const cacheKey = `products:${search}:${category}:${minPrice}:${maxPrice}:${sortBy}:${order}:${page}:${limit}`;
 
-    
+
     type ProductListCache = {
         products: any[];
         pagination: {
-        total: number;
-        page: number;
-        limit: number;
-        totalPages: number;
-        hasNext: boolean;
-        hasPrev: boolean;
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+            hasNext: boolean;
+            hasPrev: boolean;
         };
     };
 
@@ -159,10 +159,10 @@ const getAllProducts = asyncHandler(async (req: Request, res: Response) => {
         isActive: true
     }
 
-    if(search){
+    if (search) {
         where.OR = [
             { name: { contains: String(search), mode: 'insensitive' } },
-            { description:  { contains: String(search), mode: 'insensitive' } }
+            { description: { contains: String(search), mode: 'insensitive' } }
         ];
     }
 
@@ -194,10 +194,10 @@ const getAllProducts = asyncHandler(async (req: Request, res: Response) => {
     const [products, total] = await Promise.all([
         prisma.product.findMany({
             where,
-            include:  { category: true },
-            orderBy:  { [sortField]: sortOrder },
+            include: { category: true },
+            orderBy: { [sortField]: sortOrder },
             skip,
-            take:     pageLimit,
+            take: pageLimit,
         }),
         prisma.product.count({ where }),
     ]);
@@ -206,15 +206,15 @@ const getAllProducts = asyncHandler(async (req: Request, res: Response) => {
         products,
         pagination: {
             total,
-            page:       currentPage,
-            limit:      pageLimit,
+            page: currentPage,
+            limit: pageLimit,
             totalPages: Math.ceil(total / pageLimit),
-            hasNext:    currentPage < Math.ceil(total / pageLimit),
-            hasPrev:    currentPage > 1,
+            hasNext: currentPage < Math.ceil(total / pageLimit),
+            hasPrev: currentPage > 1,
         }
     };
 
-// ── Cache for 5 min ───────────────────────────────────────
+    // ── Cache for 5 min ───────────────────────────────────────
     await setCache(cacheKey, responseData, 300);
     logger.info(`Cache SET: ${cacheKey}`);
 
