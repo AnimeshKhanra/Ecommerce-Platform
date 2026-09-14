@@ -14,15 +14,17 @@ export default function RecentOrdersTable({ orders }: { orders: any[] }) {
                 </thead>
 
                 <tbody>
-                    {orders.map((order) => (
-                        <tr key={order.id}>
-                            <td>{order.id.slice(0, 8)}</td>
+                    {orders?.map((order) => (
+                        // <tr key={order.id}>
+                        <tr key={Date.now()}>
+                            {/* <td>{order?.id?.slice(0, 8)}</td> */}
+                            <td>{order?.id ? order.id.slice(0, 8) : 'N/A'}</td>
 
-                            <td>{order.user.name}</td>
+                            <td>{order?.user?.name || 'Unknown User'}</td>
 
-                            <td>₹{order.totalAmount}</td>
+                            <td>₹{ order?.totalAmount || 0 }</td>
 
-                            <td>{order.status}</td>
+                            <td>{order?.status || 'UNKNOWN'}</td>
                         </tr>
                     ))}
                 </tbody>

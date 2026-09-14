@@ -6,11 +6,24 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  if(typeof window !== "undefined"){
+    const authStorage = localStorage.getItem("auth-storage");
 
-  if (token) {
-    config.headers.Authorization =
-      `Bearer ${token}`;
+    if(authStorage){
+      try {
+        const parsedAuth = JSON.parse(authStorage);
+
+        // console.log(parsedAuth?.state)
+        // console.log(parsedAuth?.state?.token)
+
+        const token = parsedAuth?.state?.token;
+        if(token){
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+      } catch (error) {
+        console.error("Failed to parse auth storage:", error);
+      }
+    }
   }
 
   return config;

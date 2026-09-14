@@ -8,12 +8,6 @@ export const adminMiddleware = (
 ) => {
   if (req.user?.role !== "ADMIN") {
     throw new ApiError(403, "Access denied")
-    
-    // return res.status(403).json({
-    //   success: false,
-    //   status: "error",
-    //   message: "Access denied",
-    // });
   }
 
   next();

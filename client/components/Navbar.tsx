@@ -33,12 +33,6 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth.store';
 
-type User = {
-  id: string;
-  name: string;
-  email: string;
-  role: 'USER' | 'ADMIN';
-};
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -68,7 +62,7 @@ export default function Navbar() {
         <nav className="ml-4 hidden items-center md:flex">
           <Link
             href="/products"
-            className={cn(buttonVariants({ variant: 'ghost' }), 'gap-2')}
+            className={cn(buttonVariants({ variant: 'ghost' }), "gap-2 hover:bg-primary/10 hover:text-primary")}
           >
             <Store className="size-4" />
             Products
@@ -76,13 +70,13 @@ export default function Navbar() {
 
           <Link
             href="/orders"
-            className={cn(buttonVariants({ variant: 'ghost' }), 'gap-2')}
+            className={cn(buttonVariants({ variant: 'ghost' }), "gap-2 hover:bg-primary/10 hover:text-primary")}
           >
             <Package className="size-4" />
             Orders
           </Link>
 
-          {storeUser?.role === 'ADMIN' && (
+          {/* {storeUser?.role === 'ADMIN' && (
             <Link
               href="/admin/dashboard"
               className={cn(buttonVariants({ variant: 'ghost' }), 'gap-2')}
@@ -90,7 +84,7 @@ export default function Navbar() {
               <LayoutDashboard className="size-4" />
               Admin Dashboard
             </Link>
-          )}
+          )} */}
         </nav>
 
         {/* Right side */}

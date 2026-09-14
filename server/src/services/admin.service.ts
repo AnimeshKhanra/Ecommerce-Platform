@@ -48,7 +48,7 @@ export const getDashboardStats = async () => {
         totalUsers,
         totalProducts,
         totalOrders,
-        totalsales: sales._sum.totalAmount || 0,
+        totalSales: sales._sum.totalAmount || 0,
         revenueByMonth,
         lowStockProducts,
         recentOrders,

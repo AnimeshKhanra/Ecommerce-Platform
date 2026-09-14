@@ -58,6 +58,7 @@ import imageRouter from "./routes/upload.routes";
 import cartRoutes from "./routes/cart.routes";
 import paymentRoutes from "./routes/payment.routes";
 import orderRoutes from "./routes/order.routes";
+// import adminOrderRouter from "./routes/adminOrder.routes";
 import reviewRoutes from "./routes/review.routes";
 
 
@@ -70,6 +71,7 @@ app.use("/api/v1/upload", imageRouter)
 app.use("/api/v1/cart", cartRoutes);
 app.use("/api/v1/payments", paymentRoutes);
 app.use("/api/v1/orders", orderRoutes);
+// app.use("/api/v1/adminOrders", adminOrderRouter);
 app.use("/api/v1/reviews", reviewRoutes);
 
 

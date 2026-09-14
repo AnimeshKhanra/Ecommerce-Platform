@@ -24,6 +24,7 @@
     cart         Cart?
 
     reviews      Review[]
+    products     Product[]
   }
 
   model Category {
@@ -44,6 +45,9 @@
 
     categoryId  String
 
+    // Admin who owns this product
+    adminId     String
+
     createdAt   DateTime    @default(now())
     updatedAt   DateTime    @updatedAt
     
@@ -53,6 +57,7 @@
     reviews     Review[]
 
     category    Category    @relation(fields: [categoryId], references: [id])
+    admin       User        @relation(fields: [adminId], references: [id])
   }
 
   model Order {

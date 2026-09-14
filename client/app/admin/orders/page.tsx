@@ -11,9 +11,13 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
 
   const fetchOrders = async () => {
-    const res = await api.get("/orders");
+    const res = await api.get("/admin/orders");
+    // console.log(res)
+    // console.log(res.data)
+    // console.log(res.data.data)
+    // console.log(res.data.orders)
 
-    setOrders(res.data.orders);
+    setOrders(res.data.data);
   };
 
   useEffect(() => {
