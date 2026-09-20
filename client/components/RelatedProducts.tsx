@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import api from "@/lib/axios";
 import { Product } from "@/types/product.types";
+import { getRelatedProducts } from "@/services/product.service";
 import ProductGrid from "./ProductGrid";
 
 interface RelatedProductsProps {
@@ -18,24 +18,18 @@ export default function RelatedProducts({
 
     useEffect(() => {
         fetchRelatedProducts();
-    }, [categoryId]);
+    }, [categoryId, currentProductId]);
 
     async function fetchRelatedProducts() {
         try {
-            const res = await api.get("/products", {
-                params: {
-                    category: categoryId,
-                    limit: 4,
-                },
-            });
+            const products = await getRelatedProducts(categoryId, 5);
 
-            const filtered = res.data.data.products.filter(
+            const filtered = products.filter(
                 (product: Product) => product.id !== currentProductId
             );
-
             setProducts(filtered.slice(0, 4));
         } catch (error) {
-            console.error(error);
+            console.error("Failed to fetch related products:", error);
         }
     }
 
