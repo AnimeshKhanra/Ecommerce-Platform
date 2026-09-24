@@ -10,30 +10,34 @@ import {
   syncCartApi,
   updateCartItemApi,
 } from "@/lib/cartApi";
+import { CartItem, CartProduct } from "@/types/cart.types";
 
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  images: string[];
-}
 
-interface CartItem {
-  id: string;
-  productId: string;
-  quantity: number;
-  product: Product;
-}
+
+// interface Product {
+//   id: string;
+//   name: string;
+//   price: number;
+//   images: string[];
+// }
+
+// interface CartItem {
+//   id: string;
+//   productId: string;
+//   quantity: number;
+//   product: Product;
+// }
 
 interface CartState {
   cartItems: CartItem[];
   loading: boolean;
 
   fetchCart: () => Promise<void>;
-  addToCart: (product: Product, quantity?: number) => Promise<void>;
+  addToCart: (product: CartProduct, quantity?: number) => Promise<void>;
   increaseQty: (itemId: string) => Promise<void>;
   decreaseQty: (itemId: string) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
+  // clearCart: (itemId: string) => Promise<void>;
   syncCartAfterLogin: () => Promise<void>;
 
   subtotal: () => number;
@@ -47,7 +51,6 @@ export const useCartStore = create<CartState>((set, get) => ({
   fetchCart: async () => {
     try {
       set({ loading: true });
-
       const data = await getCart();
 
       set({
@@ -148,7 +151,8 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   subtotal: () => {
     return get().cartItems.reduce(
-      (sum, item) => sum + item.product.price * item.quantity,
+      //TODO: CHEK HERE item.product.price
+      (sum, item) => sum + Number(item.product.price) * item.quantity,
       0
     );
   },

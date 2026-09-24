@@ -1,13 +1,35 @@
 import api from "@/lib/axios";
 import {
     Product,
+    ProductFormData,
     ProductsResponse,
     SingleProductResponse,
 } from "@/types/product.types";
 
 
+// private -------------------
+export const adminProductsService = async (): Promise<ProductsResponse> => {
+    const product = await api.get("/admin/products");
+    return product.data.data;
+}
+
+export const createProductService = async (data: ProductFormData): Promise<Product> => {
+  const response = await api.post<{ data: Product }>("/admin/products/create", data);
+  return response.data.data;
+};
+
+export const updateProductService = async (id: string, data: Partial<ProductFormData>): Promise<Product> => {
+  const response = await api.patch<{ data: Product }>(`/admin/products/${id}`,data);
+  return response.data.data;
+};
+
+export const deleteProductService = async (id: string):Promise<void> => {
+    await api.delete(`/admin/products/${id}`);
+}
 
 
+
+// Public ------------------
 export const getAllProducts = async (
     params: {
         search?: string;
@@ -31,9 +53,8 @@ export const getAllProducts = async (
 export const getProductById = async (id:string): Promise<Product> => {
     const response  = await api.get<SingleProductResponse>(`/products/${id}`);
 
-    return response .data.data;
+    return response.data.data;
 }
-
 
 export const getRelatedProducts = async (
     categoryId: string,

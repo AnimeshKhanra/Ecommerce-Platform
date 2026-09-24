@@ -78,11 +78,16 @@ export const productQuerySchema = z.object({
     
 })
 
-
-
-
-export const updateProductSchema =
-    productSchema.partial();
+export const updateProductSchema = productSchema
+    .omit({
+        images: true,
+    })
+    .partial()
+    .extend({
+        images: z.array(
+            z.string().url('Each image must be a valid URL')
+        ).optional(),
+    });
 
 export type ProductInput =
     z.infer<typeof productSchema>;

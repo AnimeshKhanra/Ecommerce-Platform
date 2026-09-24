@@ -1,90 +1,6 @@
-// "use client";
-
-// import { useEffect, useState } from "react";
-// import api from "@/lib/axios";
-// import Link from "next/link";
-// import { Product } from "@/types/product.types";
-// import ProductTable from "@/components/admin/ProductTable";
-// import EmptyState from "@/components/common/EmptyState";
-
-// export default function AdminProductsPage() {
-//   const [products, setProducts] = useState<
-//     Product[]
-//   >([]);
-
-//   useEffect(() => {
-//     fetchProducts();
-//   }, []);
-
-//   async function fetchProducts() {
-//     try {
-//       const res = await api.get("/products");
-
-//       setProducts(res.data.data.products);
-//     } catch (error) {
-//       console.error(error);
-//     }
-//   }
-
-//   async function handleDelete(id: string) {
-//     const confirmed = window.confirm(
-//       "Are you sure you want to delete this product?"
-//     );
-
-//     if (!confirmed) return;
-
-//     try {
-//       await api.delete(`/products/${id}`);
-
-//       setProducts((prev) =>
-//         prev.filter((p) => p.id !== id)
-//       );
-//     } catch (error) {
-//       console.error(error);
-//     }
-//   }
-
-
-//   if (!products.length) {
-//     return (
-//       <EmptyState
-//         title="No Products"
-//         description="Start by creating your first product."
-//         buttonText="Create Product"
-//         buttonLink="/admin/products/create"
-//       />
-//     );
-//   }
-
-
-//   return (
-//     <div className="max-w-7xl mx-auto px-6 py-10">
-//       <div className="flex flex-col md:flex-row gap-4 justify-between md:items-center mb-8">
-//         <h1 className="text-3xl font-bold">
-//           Admin Products
-//         </h1>
-
-//         <Link
-//           href="/admin/products/create"
-//           className="bg-indigo-600 text-white px-6 py-3 rounded-xl"
-//         >
-//           Add Product
-//         </Link>
-//       </div>
-
-//       <ProductTable
-//         products={products}
-//         onDelete={handleDelete}
-//       />
-//     </div>
-//   );
-// }
-
-
-
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { Plus, Package } from "lucide-react";
 import toast from "react-hot-toast";
@@ -114,24 +30,35 @@ import {
 import { cn } from "@/lib/utils";
 import ProductTable from "@/components/admin/ProductTable";
 import EmptyState from "@/components/common/EmptyState";
+import { adminProductsService } from "@/services/product.service";
+import {
+  getAllProducts,
+  deleteProductService,
+} from "@/services/product.service";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+
+  const fetchProducts = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await adminProductsService();
+      setProducts(response.products);
+    } catch (error) {
+      console.error("Failed to fetch products:", error);
+      toast.error("Failed to load products");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [fetchProducts]);
 
-  async function fetchProducts() {
-    try {
-      const res = await api.get("/products");
-      setProducts(res.data.data.products);
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to load products");
-    }
-  }
 
   function handleDelete(id: string) {
     setProductToDelete(id); // open confirmation dialog
@@ -141,7 +68,7 @@ export default function AdminProductsPage() {
     if (!productToDelete) return;
 
     try {
-      await api.delete(`/products/${productToDelete}`);
+      await deleteProductService(productToDelete);
       setProducts((prev) => prev.filter((p) => p.id !== productToDelete));
       toast.success("Product deleted");
     } catch (error) {
@@ -152,6 +79,14 @@ export default function AdminProductsPage() {
     }
   }
 
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-6 py-10">
+        <p>Loading products...</p>
+      </div>
+    );
+  }
+  
   if (!products.length) {
     return (
       <EmptyState
@@ -162,6 +97,20 @@ export default function AdminProductsPage() {
       />
     );
   }
+
+  // if (products.length === 0) {
+  //   return (
+  //     <EmptyState
+  //       title="No products found"
+  //       description="Start by creating your first product."
+  //       action={
+  //         <Link href="/admin/products/create">
+  //           Add Product
+  //         </Link>
+  //       }
+  //     />
+  //   );
+  // }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-6">

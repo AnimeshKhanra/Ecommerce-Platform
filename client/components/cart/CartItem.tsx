@@ -13,7 +13,8 @@ interface CartItemProps {
     product: {
       id: string;
       name: string;
-      price: number;
+      // price: number;
+      price: string;
       images: string[];
     };
   };

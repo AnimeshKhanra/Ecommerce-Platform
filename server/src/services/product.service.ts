@@ -9,6 +9,16 @@ import {
     setCache,
 } from '../utils/redisUtils';
 
+interface GetAdminProductsInput {
+    search?: string;
+    category?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    sortBy?: 'createdAt' | 'price' | 'name';
+    order?: 'asc' | 'desc';
+    page?: number;
+    limit?: number;
+}
 
 interface CreateProductInput {
     name: string;
@@ -59,7 +69,77 @@ interface ProductListResponse {
     };
 }
 
+// Private
+const getAdminProductService = async (
+    adminId: string,
+    page: number = 1,
+    limit: number = 20
+): Promise<ProductListResponse> => {
+    const currentPage = Math.max(1, page);
+    const pageLimit = Math.max(1, Math.min(limit, 100));
 
+    const skip = (currentPage - 1) * pageLimit;
+
+    const where: Prisma.ProductWhereInput = {
+        adminId,
+    };
+
+    const [products, total] = await Promise.all([
+        prisma.product.findMany({
+            where,
+            include: {
+                category: true,
+            },
+            orderBy: {
+                createdAt: 'desc',
+            },
+            skip,
+            take: pageLimit,
+        }),
+
+        prisma.product.count({
+            where,
+        }),
+    ]);
+
+    const totalPages = Math.ceil(total / pageLimit);
+
+    return {
+        products,
+        pagination: {
+            total,
+            page: currentPage,
+            limit: pageLimit,
+            totalPages,
+            hasNext: currentPage < totalPages,
+            hasPrev: currentPage > 1,
+        },
+    };
+};
+
+const getAdminProductByIdService = async (
+    id: string,
+    adminId: string
+): Promise<ProductWithCategeroy> => {
+    const product = await prisma.product.findFirst({
+        where: {
+            id,
+            adminId,
+        },
+        include: {
+            category: true,
+        },
+    });
+
+    if (!product) {
+        throw new ApiError(
+            404,
+            'Product not found or you do not have permission to access it'
+        );
+    }
+
+    return product;
+};
 
 const createProductService = async (
     data: CreateProductInput,
@@ -96,14 +176,16 @@ const createProductService = async (
 
     await delCacheByPattern('products:*');
 
-    logger.info(
-        `Product created: ${product.id} by admin: ${adminId}`
-    );
+    logger.info(`Product created: ${product.id} by admin: ${adminId}`);
 
     return product;
 };
 
-const updateProductService = async (id: string, adminId: string, data: UpdateProductInput) => {
+const updateProductService = async (
+    id: string,
+    adminId: string,
+    data: UpdateProductInput
+) => {
     const existingProduct = await prisma.product.findFirst({
         where: {
             id,
@@ -112,7 +194,10 @@ const updateProductService = async (id: string, adminId: string, data: UpdatePro
     });
 
     if (!existingProduct) {
-        throw new ApiError(404, 'Product not found or you do not have permission to update it');
+        throw new ApiError(
+            404,
+            'Product not found or you do not have permission to update it'
+        );
     }
 
     // 2. If categoryId is being changed,
@@ -173,24 +258,24 @@ const updateProductService = async (id: string, adminId: string, data: UpdatePro
     await delCacheByPattern('products:*');
     await delCache(`product:${id}`);
 
-
     logger.info(`Product updated: ${id}`);
 
     return updatedProduct;
-
-}
+};
 
 const deleteProductService = async (id: string, adminId: string) => {
-
     const existingProduct = await prisma.product.findFirst({
         where: {
             id,
-            adminId
+            adminId,
         },
     });
 
     if (!existingProduct) {
-        throw new ApiError(404, 'Product not found or you do not have permission to update it');
+        throw new ApiError(
+            404,
+            'Product not found or you do not have permission to update it'
+        );
     }
 
     const deletedProduct = await prisma.product.update({
@@ -208,11 +293,13 @@ const deleteProductService = async (id: string, adminId: string) => {
     logger.info(`Product deleted: ${id}`);
 
     return existingProduct;
-}
+};
 
+// Public services
 
-
-const getAllProductsService = async (params: GetAllProductsInput): Promise<ProductListResponse> => {
+const getAllProductsService = async (
+    params: GetAllProductsInput
+): Promise<ProductListResponse> => {
     const {
         search = '',
         category,
@@ -241,16 +328,16 @@ const getAllProductsService = async (params: GetAllProductsInput): Promise<Produ
             {
                 name: {
                     contains: search,
-                    mode: 'insensitive'
-                }
+                    mode: 'insensitive',
+                },
             },
             {
                 description: {
                     contains: search,
                     mode: 'insensitive',
                 },
-            }
-        ]
+            },
+        ];
     }
 
     if (category) {
@@ -272,19 +359,11 @@ const getAllProductsService = async (params: GetAllProductsInput): Promise<Produ
 
     // 3. Allowed sorting
 
-    const allowedSortFields = [
-        'createdAt',
-        'price',
-        'name',
-    ] as const;
+    const allowedSortFields = ['createdAt', 'price', 'name'] as const;
 
-    const sortField = allowedSortFields.includes(
-        sortBy
-    )
-        ? sortBy
-        : 'createdAt';
+    const sortField = allowedSortFields.includes(sortBy) ? sortBy : 'createdAt';
 
-    const sortOrder = (order === 'asc') ? 'asc' : 'desc';
+    const sortOrder = order === 'asc' ? 'asc' : 'desc';
 
     // 4. Create cache key
 
@@ -301,15 +380,10 @@ const getAllProductsService = async (params: GetAllProductsInput): Promise<Produ
 
     // 5. Check Redis
 
-    const cached =
-        await getCache<ProductListResponse>(
-            cacheKey
-        );
+    const cached = await getCache<ProductListResponse>(cacheKey);
 
     if (cached) {
-        logger.info(
-            `PRODUCT LIST CACHE HIT: ${cacheKey}`
-        );
+        logger.info(`PRODUCT LIST CACHE HIT: ${cacheKey}`);
 
         return cached;
     }
@@ -320,7 +394,7 @@ const getAllProductsService = async (params: GetAllProductsInput): Promise<Produ
         prisma.product.findMany({
             where,
             include: {
-                category: true
+                category: true,
             },
             orderBy: {
                 [sortField]: sortOrder,
@@ -329,9 +403,9 @@ const getAllProductsService = async (params: GetAllProductsInput): Promise<Produ
             take: pageLimit,
         }),
         prisma.product.count({
-            where
-        })
-    ])
+            where,
+        }),
+    ]);
 
     // 7. Pagination metadata
 
@@ -346,8 +420,8 @@ const getAllProductsService = async (params: GetAllProductsInput): Promise<Produ
             totalPages,
             hasNext: currentPage < totalPages,
             hasPrev: currentPage > 1,
-        }
-    }
+        },
+    };
 
     // 8. Cache result
 
@@ -363,29 +437,31 @@ const getAllProductsService = async (params: GetAllProductsInput): Promise<Produ
     );
 
     return responseData;
-}
+};
 
-const getProductByIdService = async(id: string): Promise<ProductWithCategeroy> => {
+const getProductByIdService = async (
+    id: string
+): Promise<ProductWithCategeroy> => {
     const cacheKey = `product:${id}`;
 
     // 1. Check Redis cache
     const cached = await getCache<any>(cacheKey);
 
-    if(cached){
+    if (cached) {
         logger.info(`PRODUCT CACHE HIT: ${id}`);
         return cached;
     }
 
     // 2. Fetch product from database
     const product = await prisma.product.findUnique({
-        where: {id},
+        where: { id },
         include: {
             category: true,
         },
-    })
+    });
 
     // if data is not present Or soft-deleted
-    if(!product || !product.isActive){
+    if (!product || !product.isActive) {
         throw new ApiError(404, 'Product not found');
     }
 
@@ -394,11 +470,11 @@ const getProductByIdService = async(id: string): Promise<ProductWithCategeroy> =
     logger.info(`PRODUCT FETCHED: ${id}`);
 
     return product;
-}
-
-
+};
 
 export {
+    getAdminProductService,
+    getAdminProductByIdService,
     createProductService,
     updateProductService,
     deleteProductService,
