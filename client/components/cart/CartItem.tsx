@@ -1,23 +1,28 @@
 // components/cart/CartItem.tsx
 
-"use client";
+'use client';
 
-import Image from "next/image";
-import { Minus, Plus, Trash2 } from "lucide-react";
-import { useCartStore } from "@/store/cartStore";
+import Image from 'next/image';
+import { Minus, Plus, Trash2 } from 'lucide-react';
+import { useCartStore } from '@/store/cartStore';
+import type { CartItem as CartItemType } from '@/types/cart.types';
+
+// interface CartItemProps {
+//   item: {
+//     id: string;
+//     quantity: number;
+//     product: {
+//       id: string;
+//       name: string;
+//       // price: number;
+//       price: string;
+//       images: string[];
+//     };
+//   };
+// }
 
 interface CartItemProps {
-  item: {
-    id: string;
-    quantity: number;
-    product: {
-      id: string;
-      name: string;
-      // price: number;
-      price: string;
-      images: string[];
-    };
-  };
+  item: CartItemType;
 }
 
 export default function CartItem({ item }: CartItemProps) {
@@ -49,9 +54,7 @@ export default function CartItem({ item }: CartItemProps) {
               <Minus size={18} />
             </button>
 
-            <span className="min-w-[20px] text-center">
-              {item.quantity}
-            </span>
+            <span className="min-w-[20px] text-center">{item.quantity}</span>
 
             <button
               onClick={() => increaseQty(item.id)}

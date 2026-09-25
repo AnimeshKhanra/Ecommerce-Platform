@@ -1,85 +1,12 @@
-// "use client";
+'use client';
 
-// import { useState } from "react";
-// import { useAuthStore } from "@/store/auth.store";
-// import { useRouter } from "next/navigation";
-// import toast from "react-hot-toast";
+import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
+import { Mail, Lock, Eye, EyeOff, Loader2, LogIn } from 'lucide-react';
 
-
-// export default function LoginForm() {
-//   const router = useRouter();
-//   const { login, loading } = useAuthStore();
-
-//   const [email, setEmail] = useState("");
-//   const [password, setPassword] = useState("");
-
-//   const handleSubmit = async (
-//     e: React.FormEvent
-//   ) => {
-//     e.preventDefault();
-
-//     try {
-//       await login({ email, password });
-//       router.push("/");
-//     } catch {
-//       toast.error("Login failed");
-//     }
-//   };
-
-//   return (
-//     <form
-//       onSubmit={handleSubmit}
-//       className="space-y-4 bg-white p-8 rounded-xl shadow-lg"
-//     >
-//       <h2 className="text-3xl font-bold text-center">
-//         Login
-//       </h2>
-
-//       <input
-//         type="email"
-//         placeholder="Email"
-//         className="w-full border p-3 rounded-lg"
-//         value={email}
-//         onChange={(e) => setEmail(e.target.value)}
-//       />
-
-//       <input
-//         type="password"
-//         placeholder="Password"
-//         className="w-full border p-3 rounded-lg"
-//         value={password}
-//         onChange={(e) => setPassword(e.target.value)}
-//       />
-
-//       <button
-//         disabled={loading}
-//         className="w-full bg-black text-white py-3 rounded-lg"
-//       >
-//         {loading ? "Loading..." : "Login"}
-//       </button>
-//     </form>
-//   );
-// }
-
-
-
-
-"use client";
-
-import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
-import {
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  Loader2,
-  LogIn,
-} from "lucide-react";
-
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -87,17 +14,19 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useAuthStore } from "@/store/auth.store";
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useAuthStore } from '@/store/auth.store';
+import { useCartStore } from '@/store/cartStore';
 
 export default function LoginForm() {
   const router = useRouter();
   const { login, loading } = useAuthStore();
+  // const
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -105,10 +34,13 @@ export default function LoginForm() {
 
     try {
       await login({ email, password });
-      toast.success("Welcome back!");
-      router.push("/");
+
+      await useCartStore.getState().syncCartAfterLogin();
+
+      toast.success('Welcome back!');
+      router.push('/');
     } catch {
-      toast.error("Login failed");
+      toast.error('Login failed');
     }
   };
 
@@ -159,7 +91,7 @@ export default function LoginForm() {
                 <Lock className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="password"
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   className="pl-9 pr-10"
                   value={password}
@@ -184,14 +116,14 @@ export default function LoginForm() {
             {/* Submit */}
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="size-4 animate-spin" />}
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
         </CardContent>
 
         <CardFooter className="justify-center">
           <p className="text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
+            Don&apos;t have an account?{' '}
             <Link
               href="/register"
               className="font-medium text-primary hover:underline"

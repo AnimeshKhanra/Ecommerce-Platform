@@ -1,11 +1,9 @@
-import prisma from '../config/prisma';
 import { Request, Response } from 'express';
 import { addToCartSchema, updateCartSchema } from '../schemas/cart.schema';
 import { asyncHandler } from '../utils/asyncHandler';
 import { ApiError } from '../utils/ApiError';
 import { ApiResponse } from '../utils/ApiResponse';
-import { delCache, getCache, setCache } from '../utils/redisUtils';
-import { addToCartService, clearCartService, getCartService, removeCartItemService, updateCartItemService } from '../services/cart.service';
+import { addToCartService, clearCartService, getCartService, removeCartItemService, syncCartService, updateCartItemService } from '../services/cart.service';
 
 const getCartCacheKey = (userId: string) => `cart:${userId}`;
 
@@ -97,7 +95,17 @@ const clearCart = asyncHandler(async (req: Request, res: Response) => {
         );
 })
 
+const syncCart = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user?.id as string;
 
+    const cart = await syncCartService(userId, req.body);
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, cart, "Cart synced successfully")
+        )
+})
 
 export {
     getCart,
@@ -105,4 +113,5 @@ export {
     updateCartItem,
     removeCartItem,
     clearCart,
+    syncCart
 }

@@ -1,22 +1,35 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 export const addToCartSchema = z.object({
-    productId: z.string().min(1, "Product ID is required"),
+    productId: z.string().min(1, 'Product ID is required'),
     quantity: z
         .number()
-        .int("Quantity must be an integer")
-        .min(1, "Quantity must be at least 1")
-        .max(10, "Maximum quantity is 10"),
+        .int('Quantity must be an integer')
+        .min(1, 'Quantity must be at least 1')
+        .max(10, 'Maximum quantity is 10'),
 });
 
 export const updateCartSchema = z.object({
     quantity: z
         .number()
-        .int("Quantity must be an integer")
-        .min(1, "Quantity must be at least 1")
-        .max(10, "Maximum quantity is 10"),
+        .int('Quantity must be an integer')
+        .min(1, 'Quantity must be at least 1')
+        .max(10, 'Maximum quantity is 10'),
+});
+
+export const syncCartSchema = z.object({
+    items: z
+        .array(
+            z.object({
+                productId: z.string().min(1),
+                quantity: z.number().int().min(1).max(10),
+            })
+        )
+        .max(50),
 });
 
 export type AddToCartInput = z.infer<typeof addToCartSchema>;
 
 export type UpdateCartItemInput = z.infer<typeof updateCartSchema>;
+
+export type SyncCartInput = z.infer<typeof syncCartSchema>;

@@ -1,17 +1,32 @@
 "use client";
 
+import { useCartStore } from "@/store/cartStore";
+import { CartProduct } from "@/types/cart.types";
 import { ShoppingCart } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface AddToCartButtonProps {
     stock: number;
+    product: CartProduct;
 }
 
 export default function AddToCartButton({
     stock,
+    product
 }: AddToCartButtonProps) {
+    const { addToCart } = useCartStore();
     
-    const handleAddToCart = () => {
-        alert("Cart functionality coming in next day");
+    const handleAddToCart = async () => {
+        // alert("Cart functionality coming in next day");
+        try {
+            await addToCart(product, 1);
+
+            toast.success("Product added to cart");
+        } catch (error) {
+            console.error("Failed to add product:", error);
+
+            toast.error("Failed to add product to cart");
+        }
     };
 
     return (
@@ -24,7 +39,8 @@ export default function AddToCartButton({
                 }`}
         >
             <ShoppingCart className="w-5 h-5" />
-            Add to Cart
+            {/* Add to Cart */}
+            {stock <= 0 ? "Out of Stock" : "Add to Cart"}
         </button>
     );
 }

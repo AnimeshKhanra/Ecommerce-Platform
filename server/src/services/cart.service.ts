@@ -1,15 +1,13 @@
-import prisma from "../config/prisma";
-import { ApiError } from "../utils/ApiError";
-import { delCache, getCache, setCache } from "../utils/redisUtils";
+import prisma from '../config/prisma';
+import { ApiError } from '../utils/ApiError';
+import { delCache, getCache, setCache } from '../utils/redisUtils';
 import {
     AddToCartInput,
+    SyncCartInput,
     UpdateCartItemInput,
-} from "../schemas/cart.schema";
-import { string } from "zod";
+} from '../schemas/cart.schema';
 
 const getCartCacheKey = (userId: string) => `cart:${userId}`;
-
-
 
 const getCartService = async (userId: string) => {
     const cacheKey = getCartCacheKey(userId);
@@ -25,21 +23,18 @@ const getCartService = async (userId: string) => {
             items: {
                 include: {
                     product: true,
-                }
-            }
-        }
-    })
+                },
+            },
+        },
+    });
 
     const finalCart = cart || { items: [] };
     await setCache(cacheKey, finalCart, 3600);
 
     return finalCart;
-}
+};
 
-const addToCartService = async (
-    userId: string,
-    data: AddToCartInput
-) => {
+const addToCartService = async (userId: string, data: AddToCartInput) => {
     const product = await prisma.product.findUnique({
         where: {
             id: data.productId,
@@ -47,7 +42,7 @@ const addToCartService = async (
     });
 
     if (!product) {
-        throw new ApiError(404, "Product not found");
+        throw new ApiError(404, 'Product not found');
     }
 
     let cart = await prisma.cart.findUnique({
@@ -78,7 +73,7 @@ const addToCartService = async (
         : data.quantity;
 
     if (product.stock < newQuantity) {
-        throw new ApiError(400, "Not enough stock");
+        throw new ApiError(400, 'Not enough stock');
     }
 
     if (existingItem) {
@@ -121,11 +116,11 @@ const updateCartItemService = async (
     });
 
     if (!item || item.cart.userId !== userId) {
-        throw new ApiError(404, "Cart item not found");
+        throw new ApiError(404, 'Cart item not found');
     }
 
     if (item.product.stock < data.quantity) {
-        throw new ApiError(400, "Not enough stock");
+        throw new ApiError(400, 'Not enough stock');
     }
 
     await prisma.cartItem.update({
@@ -142,7 +137,10 @@ const updateCartItemService = async (
     return null;
 };
 
-const removeCartItemService = async (userId: string, itemId: string): Promise<void> => {
+const removeCartItemService = async (
+    userId: string,
+    itemId: string
+): Promise<void> => {
     const item = await prisma.cartItem.findUnique({
         where: { id: itemId },
         include: {
@@ -160,29 +158,131 @@ const removeCartItemService = async (userId: string, itemId: string): Promise<vo
 
     await delCache(getCartCacheKey(userId));
     // return null;
-}
+};
 
 const clearCartService = async (userId: string): Promise<void> => {
     const cart = await prisma.cart.findUnique({
         where: {
-            userId
-        }
-    })
+            userId,
+        },
+    });
 
-    if(!cart){
+    if (!cart) {
         return;
     }
 
     await prisma.cartItem.deleteMany({
         where: {
             cartId: cart.id,
-        }
-    })
+        },
+    });
 
     await delCache(getCartCacheKey(userId));
-}
+};
 
+const syncCartService = async (userId: string, data: SyncCartInput) => {
+    const { items } = data;
 
+    // Empty guest cart
+    if (items.length === 0) {
+        return getCartService(userId);
+    }
+
+    const cart = await prisma.$transaction(async (tx) => {
+        // 1. find existing cart or create one
+        // 2. process every guest cart item
+        // 2.1 Find product
+        // 2.2 find existing cart item
+        // 3. check stock aginst final quantity
+        // 4. update existing item
+        // 5. create new item
+        // 6. return update cart
+        // 7. Invalidate Redis cache
+
+        let userCart = await tx.cart.findUnique({
+            where: { userId },
+        });
+
+        if (!userCart) {
+            userCart = await tx.cart.create({
+                data: { userId },
+            });
+        }
+
+        for (const item of items) {
+            // find product
+            const product = await tx.product.findUnique({
+                where: {
+                    id: item.productId,
+                },
+            });
+
+            if (!product) {
+                throw new ApiError(404, `Product not found: ${item.productId}`);
+            }
+
+            // find existing cart item
+            const existingItem = await tx.cartItem.findUnique({
+                where: {
+                    cartId_productId: {
+                        cartId: userCart.id,
+                        productId: item.productId,
+                    },
+                },
+            });
+
+            const newQuantity = existingItem
+                ? existingItem?.quantity + item.quantity
+                : item.quantity;
+
+            // 3. Check stock against FINAL quantity
+            if (product.stock < newQuantity) {
+                throw new ApiError(
+                    400,
+                    `Only ${product.stock} units of "${product.name}" are available`
+                );
+            }
+
+            // 4. update existing item
+            if (existingItem) {
+                await tx.cartItem.update({
+                    where: {
+                        id: existingItem.id,
+                    },
+                    data: {
+                        quantity: newQuantity,
+                    },
+                });
+            }
+            // 5. Create new item
+            else {
+                await tx.cartItem.create({
+                    data: {
+                        cartId: userCart.id,
+                        productId: item.productId,
+                        quantity: item.quantity,
+                    },
+                });
+            }
+        }
+
+        // 6. Return updated cart
+        return tx.cart.findUnique({
+            where: { id: userCart.id },
+            include: {
+                items: {
+                    include: {
+                        product: true,
+                    },
+                },
+            },
+        });
+    });
+    // 7. Invalidate Redis cache
+    await delCache(`cart:${userId}`);
+
+    return cart;
+};
 
 export {
     getCartService,
@@ -190,4 +290,5 @@ export {
     updateCartItemService,
     removeCartItemService,
     clearCartService,
-}
+    syncCartService
+};

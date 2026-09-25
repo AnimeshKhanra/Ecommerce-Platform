@@ -94,7 +94,7 @@ export default function ProductDetail({ id }: ProductDetailProps) {
 
                     <StockIndicator stock={product.stock} />
 
-                    <AddToCartButton stock={product.stock} />
+                    <AddToCartButton stock={product.stock} product={product} />
                 </div>
             </div>
 
