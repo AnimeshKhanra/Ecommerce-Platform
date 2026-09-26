@@ -1,49 +1,237 @@
+// 'use client';
+
+// import { useState } from 'react';
+// import { z } from 'zod';
+// import { createCheckout, ShippingAddress } from '@/lib/checkoutApi';
+// import toast from 'react-hot-toast';
+
+// const shippingSchema = z.object({
+//   fullName: z.string().min(2, 'Full name must be at least 2 characters'),
+//   phone: z.string().min(10, 'Phone number must be at least 10 characters'),
+//   addressLine1: z.string().min(5, 'Address must be at least 5 characters'),
+//   addressLine2: z.string().optional(),
+//   city: z.string().min(2, 'City is required'),
+//   state: z.string().min(2, 'State is required'),
+//   postalCode: z.string().min(4, 'Postal code is required'),
+//   country: z.string().min(2, 'Country is required'),
+// });
+
+// // type ShippingFormData = z.infer<typeof shippingSchema>;
+
+// export default function ShippingForm() {
+//   const [formData, setFormData] = useState<ShippingAddress>({
+//     fullName: "",
+//     phone: "",
+//     addressLine1: "",
+//     addressLine2: "",
+//     city: "",
+//     state: "",
+//     postalCode: "",
+//     country: "India",
+//   });
+
+//   const [errors, setErrors] = useState<
+//     Partial<Record<keyof ShippingAddress, string>>
+//   >({});
+
+//   const [loading, setLoading] = useState(false);
+
+//   async function handleSubmit(e: React.FormEvent) {
+//     e.preventDefault();
+
+//     const parsed = shippingSchema.safeParse(formData);
+
+//     if (!parsed.success) {
+//       const fieldErrors: any = {};
+//       parsed.error.issues.forEach((err) => {
+//         fieldErrors[err.path[0]] = err.message;
+//       });
+//       setErrors(fieldErrors);
+//       return;
+//     }
+
+//     setErrors({});
+//     setLoading(true);
+
+//     try {
+//       const res = await createCheckout(formData);
+
+//       window.location.href = res.url;
+//     } catch (error) {
+//       console.error(error);
+//       toast.error('Checkout failed');
+//     } finally {
+//       setLoading(false);
+//     }
+//   }
+
+//   function updateField(field: keyof ShippingAddress, value: string) {
+//     setFormData((prev) => ({
+//       ...prev,
+//       [field]: value,
+//     }));
+//   }
+
+//   return (
+//     <form
+//       onSubmit={handleSubmit}
+//       className="space-y-5 bg-white p-6 rounded-2xl border shadow-sm"
+//     >
+//       <h2 className="text-2xl font-bold">Shipping Address</h2>
+
+//       <div>
+//         <input
+//           type="text"
+//           placeholder="Full Name"
+//           value={formData.fullName}
+//           onChange={(e) => updateField('fullName', e.target.value)}
+//           className="w-full border p-3 rounded-lg"
+//         />
+//         {errors.fullName && (
+//           <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>
+//         )}
+//       </div>
+
+//       <div>
+//         <input
+//           type="text"
+//           placeholder="Address"
+//           value={formData.address}
+//           onChange={(e) => updateField('address', e.target.value)}
+//           className="w-full border p-3 rounded-lg"
+//         />
+//         {errors.address && (
+//           <p className="text-red-500 text-sm mt-1">{errors.address}</p>
+//         )}
+//       </div>
+
+//       <div className="grid md:grid-cols-3 gap-4">
+//         <div>
+//           <input
+//             type="text"
+//             placeholder="City"
+//             value={formData.city}
+//             onChange={(e) => updateField('city', e.target.value)}
+//             className="w-full border p-3 rounded-lg"
+//           />
+//           {errors.city && (
+//             <p className="text-red-500 text-sm mt-1">{errors.city}</p>
+//           )}
+//         </div>
+
+//         <div>
+//           <input
+//             type="text"
+//             placeholder="Postal Code"
+//             value={formData.postalCode}
+//             onChange={(e) => updateField('postalCode', e.target.value)}
+//             className="w-full border p-3 rounded-lg"
+//           />
+//           {errors.postalCode && (
+//             <p className="text-red-500 text-sm mt-1">{errors.postalCode}</p>
+//           )}
+//         </div>
+
+//         <div>
+//           <input
+//             type="text"
+//             placeholder="Country"
+//             value={formData.country}
+//             onChange={(e) => updateField('country', e.target.value)}
+//             className="w-full border p-3 rounded-lg"
+//           />
+//           {errors.country && (
+//             <p className="text-red-500 text-sm mt-1">{errors.country}</p>
+//           )}
+//         </div>
+//       </div>
+
+//       <button
+//         type="submit"
+//         disabled={loading}
+//         className="w-full bg-black text-white py-4 rounded-xl hover:opacity-90"
+//       >
+//         {loading ? 'Redirecting...' : 'Proceed to Payment'}
+//       </button>
+//     </form>
+//   );
+// }
+
+
 "use client";
 
 import { useState } from "react";
 import { z } from "zod";
-import { createCheckoutSession } from "@/lib/paymentApi";
-import toast from "react-hot-toast"
+import { createCheckout } from "@/lib/checkoutApi";
+import { ShippingAddress } from "@/types/checkout.types";
+import toast from "react-hot-toast";
 
 const shippingSchema = z.object({
-  fullName: z.string().min(2, "Full name required"),
-  address: z.string().min(5, "Address required"),
-  city: z.string().min(2, "City required"),
-  postalCode: z.string().min(4, "Postal code required"),
-  country: z.string().min(2, "Country required"),
-});
+  fullName: z
+    .string()
+    .min(2, "Full name must be at least 2 characters"),
 
-type ShippingFormData = z.infer<typeof shippingSchema>;
+  phone: z
+    .string()
+    .min(10, "Phone number must be at least 10 characters"),
+
+  addressLine1: z
+    .string()
+    .min(5, "Address must be at least 5 characters"),
+
+  addressLine2: z
+    .string()
+    .optional(),
+
+  city: z
+    .string()
+    .min(2, "City is required"),
+
+  state: z
+    .string()
+    .min(2, "State is required"),
+
+  postalCode: z
+    .string()
+    .min(4, "Postal code is required"),
+
+  country: z
+    .string()
+    .min(2, "Country is required"),
+});
 
 export default function ShippingForm() {
   const [formData, setFormData] =
-    useState<ShippingFormData>({
+    useState<ShippingAddress>({
       fullName: "",
-      address: "",
+      phone: "",
+      addressLine1: "",
+      addressLine2: "",
       city: "",
+      state: "",
       postalCode: "",
       country: "India",
     });
 
   const [errors, setErrors] = useState<
-    Partial<Record<keyof ShippingFormData, string>>
+    Partial<Record<keyof ShippingAddress, string>>
   >({});
 
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(
-    e: React.FormEvent
-  ) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-
-    const parsed =
-      shippingSchema.safeParse(formData);
+    const parsed = shippingSchema.safeParse(formData);
 
     if (!parsed.success) {
-      const fieldErrors: any = {};
+      const fieldErrors: Partial<
+        Record<keyof ShippingAddress, string>
+      > = {};
 
       parsed.error.issues.forEach((err) => {
-        fieldErrors[err.path[0]] = err.message;
+        const field = err.path[0] as keyof ShippingAddress;
+
+        fieldErrors[field] = err.message;
       });
 
       setErrors(fieldErrors);
@@ -54,12 +242,11 @@ export default function ShippingForm() {
     setLoading(true);
 
     try {
-      const res =
-        await createCheckoutSession(formData);
+      const res = await createCheckout(formData);
 
       window.location.href = res.url;
     } catch (error) {
-      console.error(error);
+      console.error("Checkout error:", error);
       toast.error("Checkout failed");
     } finally {
       setLoading(false);
@@ -67,7 +254,7 @@ export default function ShippingForm() {
   }
 
   function updateField(
-    field: keyof ShippingFormData,
+    field: keyof ShippingAddress,
     value: string
   ) {
     setFormData((prev) => ({
@@ -85,19 +272,18 @@ export default function ShippingForm() {
         Shipping Address
       </h2>
 
+      {/* Full Name */}
       <div>
         <input
           type="text"
           placeholder="Full Name"
           value={formData.fullName}
           onChange={(e) =>
-            updateField(
-              "fullName",
-              e.target.value
-            )
+            updateField("fullName", e.target.value)
           }
           className="w-full border p-3 rounded-lg"
         />
+
         {errors.fullName && (
           <p className="text-red-500 text-sm mt-1">
             {errors.fullName}
@@ -105,27 +291,68 @@ export default function ShippingForm() {
         )}
       </div>
 
+      {/* Phone */}
       <div>
         <input
-          type="text"
-          placeholder="Address"
-          value={formData.address}
+          // type="tel"
+          type=""
+          placeholder="Phone Number"
+          value={formData.phone}
           onChange={(e) =>
-            updateField(
-              "address",
-              e.target.value
-            )
+            updateField("phone", e.target.value)
           }
           className="w-full border p-3 rounded-lg"
         />
-        {errors.address && (
+        
+
+        {errors.phone && (
           <p className="text-red-500 text-sm mt-1">
-            {errors.address}
+            {errors.phone}
           </p>
         )}
       </div>
 
-      <div className="grid md:grid-cols-3 gap-4">
+      {/* Address Line 1 */}
+      <div>
+        <input
+          type="text"
+          placeholder="Address Line 1"
+          value={formData.addressLine1}
+          onChange={(e) =>
+            updateField("addressLine1", e.target.value)
+          }
+          className="w-full border p-3 rounded-lg"
+        />
+
+        {errors.addressLine1 && (
+          <p className="text-red-500 text-sm mt-1">
+            {errors.addressLine1}
+          </p>
+        )}
+      </div>
+
+      {/* Address Line 2 */}
+      <div>
+        <input
+          type="text"
+          placeholder="Address Line 2 (Optional)"
+          value={formData.addressLine2}
+          onChange={(e) =>
+            updateField("addressLine2", e.target.value)
+          }
+          className="w-full border p-3 rounded-lg"
+        />
+
+        {errors.addressLine2 && (
+          <p className="text-red-500 text-sm mt-1">
+            {errors.addressLine2}
+          </p>
+        )}
+      </div>
+
+      {/* City + State */}
+      <div className="grid md:grid-cols-2 gap-4">
+        {/* City */}
         <div>
           <input
             type="text"
@@ -136,6 +363,7 @@ export default function ShippingForm() {
             }
             className="w-full border p-3 rounded-lg"
           />
+
           {errors.city && (
             <p className="text-red-500 text-sm mt-1">
               {errors.city}
@@ -143,19 +371,40 @@ export default function ShippingForm() {
           )}
         </div>
 
+        {/* State */}
+        <div>
+          <input
+            type="text"
+            placeholder="State"
+            value={formData.state}
+            onChange={(e) =>
+              updateField("state", e.target.value)
+            }
+            className="w-full border p-3 rounded-lg"
+          />
+
+          {errors.state && (
+            <p className="text-red-500 text-sm mt-1">
+              {errors.state}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Postal Code + Country */}
+      <div className="grid md:grid-cols-2 gap-4">
+        {/* Postal Code */}
         <div>
           <input
             type="text"
             placeholder="Postal Code"
             value={formData.postalCode}
             onChange={(e) =>
-              updateField(
-                "postalCode",
-                e.target.value
-              )
+              updateField("postalCode", e.target.value)
             }
             className="w-full border p-3 rounded-lg"
           />
+
           {errors.postalCode && (
             <p className="text-red-500 text-sm mt-1">
               {errors.postalCode}
@@ -163,19 +412,18 @@ export default function ShippingForm() {
           )}
         </div>
 
+        {/* Country */}
         <div>
           <input
             type="text"
             placeholder="Country"
             value={formData.country}
             onChange={(e) =>
-              updateField(
-                "country",
-                e.target.value
-              )
+              updateField("country", e.target.value)
             }
             className="w-full border p-3 rounded-lg"
           />
+
           {errors.country && (
             <p className="text-red-500 text-sm mt-1">
               {errors.country}
@@ -184,10 +432,11 @@ export default function ShippingForm() {
         </div>
       </div>
 
+      {/* Submit */}
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-black text-white py-4 rounded-xl hover:opacity-90"
+        className="w-full bg-black text-white py-4 rounded-xl hover:opacity-90 disabled:opacity-50"
       >
         {loading
           ? "Redirecting..."

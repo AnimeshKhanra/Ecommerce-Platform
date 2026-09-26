@@ -56,6 +56,7 @@ import productRouter from "./routes/product.routes"
 import categoryRouter from "./routes/category.routes";
 import imageRouter from "./routes/upload.routes";
 import cartRoutes from "./routes/cart.routes";
+import checkoutRoutes from "./routes/checkout.routes";
 import paymentRoutes from "./routes/payment.routes";
 import orderRoutes from "./routes/order.routes";
 // import adminOrderRouter from "./routes/adminOrder.routes";
@@ -69,6 +70,7 @@ app.use("/api/v1/products", productRouter)
 app.use("/api/v1/categories", categoryRouter)
 app.use("/api/v1/upload", imageRouter)
 app.use("/api/v1/cart", cartRoutes);
+app.use("/api/v1/checkout", checkoutRoutes);
 app.use("/api/v1/payments", paymentRoutes);
 app.use("/api/v1/orders", orderRoutes);
 // app.use("/api/v1/adminOrders", adminOrderRouter);

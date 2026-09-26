@@ -66,11 +66,16 @@ model Order {
   status          OrderStatus   @default(PENDING)
   paymentStatus   PaymentStatus @default(PENDING)
   paymentIntentId String?       @unique
-  shippingName    String
-  shippingAddress String
-  city            String
-  postalCode      String
-  country         String
+
+  shippingName       String
+  shippingPhone      String
+  shippingAddress1   String
+  shippingAddress2   String?
+  shippingCity       String
+  shippingState      String
+  shippingPostalCode String
+  shippingCountry    String
+
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 

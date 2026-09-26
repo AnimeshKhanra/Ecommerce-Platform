@@ -1,37 +1,17 @@
 import api from "./axios";
-// import axios from "axios";
 
-// const paymentAPI = axios.create({
-//   baseURL:
-//     process.env.NEXT_PUBLIC_API_URL ||
-//     "http://localhost:5000/api/v1",
-// });
 
-// api.interceptors.request.use(
-//   (config) => {
-//     const token =
-//       localStorage.getItem("token");
+// export const createCheckoutSession =
+//   async (shippingAddress: any) => {
+//     const res = await api.post(
+//       "/payments/checkout",
+//       {
+//         shippingAddress,
+//       }
+//     );
 
-//     if (token) {
-//       config.headers.Authorization =
-//         `Bearer ${token}`;
-//     }
-
-//     return config;
-//   }
-// );
-
-export const createCheckoutSession =
-  async (shippingAddress: any) => {
-    const res = await api.post(
-      "/payments/checkout",
-      {
-        shippingAddress,
-      }
-    );
-
-    return res.data.data;
-  };
+//     return res.data.data;
+//   };
 
 export const getLatestOrder =
   async () => {

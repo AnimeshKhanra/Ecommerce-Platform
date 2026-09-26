@@ -51,13 +51,13 @@ const createCheckoutSession = asyncHandler(async (req: Request, res: Response) =
         name: item.product.name,
         images: item.product.images,
       },
-      unit_amount: Math.round(item.product.price * 100)
+      unit_amount: Math.round(Number(item.product.price) * 100)
     },
     quantity: item.quantity
   }))
 
   const totalAmount = cart.items.reduce(
-    (sum, item) => sum + item.product.price * item.quantity, 0
+    (sum, item) => sum + Number(item.product.price) * item.quantity, 0
   );
 
   const session = await stripe.checkout.sessions.create({
