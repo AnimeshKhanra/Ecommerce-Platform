@@ -8,6 +8,8 @@ import { createCheckoutService } from "../services/checkout.service";
 const createCheckout = asyncHandler(async (req: Request, res: Response) => {
         // 1. Validate request body
         const parsed = checkoutSchema.safeParse(req.body);
+        // console.log(parsed)
+        // console.log(parsed.success)
 
         if (!parsed.success) {
             throw new ApiError(

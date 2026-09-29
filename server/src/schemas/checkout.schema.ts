@@ -4,7 +4,7 @@ import { z } from 'zod';
 export const shippingAddressSchema = z.object({
   fullName: z.string().min(2, 'Full name must be at least 2 characters'),
   // phone: z.string().min(10, 'Phone number must be at least 10 characters'),
-  phone: z.number().min(10, 'Phone number must be at least 10 characters'),
+  phone: z.string().min(10, 'Phone number must be at least 10 characters'),
   addressLine1: z.string().min(5, 'Address must be at least 5 characters'),
   addressLine2: z.string().optional(),
   city: z.string().min(2, 'City is required'),

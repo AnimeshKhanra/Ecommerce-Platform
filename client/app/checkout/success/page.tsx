@@ -2,30 +2,67 @@
 
 // import { useEffect, useState } from "react";
 // import { getLatestOrder } from "@/lib/paymentApi";
+// import { useCartStore } from "@/store/cartStore";
 // import Link from "next/link";
 
 // export default function SuccessPage() {
-//   const [order, setOrder] =
-//     useState<any>(null);
+//   const [order, setOrder] = useState<any>(null);
+//   const fetchCart = useCartStore((state) => state.fetchCart);
+
+//   const [loading, setLoading] =
+//     useState(true);
 
 //   useEffect(() => {
-//     fetchOrder();
+//     fetchCart();
+//   }, [fetchCart]);
+
+//   useEffect(() => {
+//     pollOrder();
 //   }, []);
 
-//   async function fetchOrder() {
-//     try {
-//       const data =
-//         await getLatestOrder();
-//       setOrder(data);
-//     } catch (error) {
-//       console.error(error);
+//   async function pollOrder() {
+//     let attempts = 0;
+
+//     while (attempts < 10) {
+//       try {
+//         const data =
+//           await getLatestOrder();
+
+//         if (data) {
+//           setOrder(data);
+//           setLoading(false);
+//           return;
+//         }
+//       } catch {}
+
+//       attempts++;
+//       await new Promise((resolve) =>
+//         setTimeout(resolve, 2000)
+//       );
 //     }
+
+//     setLoading(false);
+//   }
+
+//   if (loading) {
+//     return (
+//       <div className="min-h-screen flex items-center justify-center">
+//         Confirming your payment...
+//       </div>
+//     );
 //   }
 
 //   if (!order) {
 //     return (
-//       <div className="min-h-screen flex items-center justify-center">
-//         Loading order...
+//       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+//         <p>Order confirmation delayed.</p>
+
+//         <Link
+//           href="/products"
+//           className="bg-black text-white px-6 py-3 rounded-xl"
+//         >
+//           Continue Shopping
+//         </Link>
 //       </div>
 //     );
 //   }
@@ -37,8 +74,8 @@
 //           Payment Successful 🎉
 //         </h1>
 
-//         <p className="text-gray-600 mb-8">
-//           Your order has been placed successfully.
+//         <p className="mb-8 text-gray-600">
+//           Your order has been confirmed.
 //         </p>
 
 //         <div className="space-y-4">
@@ -48,99 +85,70 @@
 //           </p>
 
 //           <p>
-//             <strong>Name:</strong>{" "}
-//             {order.shippingName}
-//           </p>
-
-//           <p>
-//             <strong>Address:</strong>{" "}
-//             {order.shippingAddress}
-//           </p>
-
-//           <p>
 //             <strong>Total:</strong> ₹
 //             {order.totalAmount}
 //           </p>
 //         </div>
-
-//         <div className="mt-8">
-//           <h2 className="text-2xl font-bold mb-4">
-//             Items
-//           </h2>
-
-//           <div className="space-y-3">
-//             {order.items.map((item: any) => (
-//               <div
-//                 key={item.id}
-//                 className="flex justify-between border-b pb-2"
-//               >
-//                 <span>
-//                   {item.product.name} ×{" "}
-//                   {item.quantity}
-//                 </span>
-
-//                 <span>
-//                   ₹
-//                   {item.price *
-//                     item.quantity}
-//                 </span>
-//               </div>
-//             ))}
-//           </div>
-//         </div>
-
-//         <Link
-//           href="/products"
-//           className="inline-block mt-8 bg-black text-white px-6 py-3 rounded-xl"
-//         >
-//           Continue Shopping
-//         </Link>
 //       </div>
 //     </div>
 //   );
 // }
 
 
+
 "use client";
 
 import { useEffect, useState } from "react";
 import { getLatestOrder } from "@/lib/paymentApi";
+import { useCartStore } from "@/store/cartStore";
 import Link from "next/link";
 
-export default function SuccessPage() {
-  const [order, setOrder] =
-    useState<any>(null);
+interface Order {
+  id: string;
+  totalAmount: number | string;
+}
 
-  const [loading, setLoading] =
-    useState(true);
+export default function SuccessPage() {
+  const [order, setOrder] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchCart = useCartStore((state) => state.fetchCart);
 
   useEffect(() => {
-    pollOrder();
-  }, []);
+    const confirmOrder = async () => {
+      let attempts = 0;
 
-  async function pollOrder() {
-    let attempts = 0;
+      while (attempts < 10) {
+        try {
+          const data = await getLatestOrder();
 
-    while (attempts < 10) {
-      try {
-        const data =
-          await getLatestOrder();
+          if (data) {
+            // Webhook has created the order,
+            // so the cart should already be cleared in DB.
+            setOrder(data);
 
-        if (data) {
-          setOrder(data);
-          setLoading(false);
-          return;
+            // Refresh Zustand cart state
+            await fetchCart();
+
+            setLoading(false);
+            return;
+          }
+        } catch (error) {
+          console.error("Waiting for order confirmation:", error);
         }
-      } catch {}
 
-      attempts++;
-      await new Promise((resolve) =>
-        setTimeout(resolve, 2000)
-      );
-    }
+        attempts++;
 
-    setLoading(false);
-  }
+        await new Promise((resolve) =>
+          setTimeout(resolve, 2000)
+        );
+      }
+
+      setLoading(false);
+    };
+
+    confirmOrder();
+  }, [fetchCart]);
 
   if (loading) {
     return (

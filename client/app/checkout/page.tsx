@@ -5,8 +5,7 @@ import { useCartStore } from "@/store/cartStore";
 import { useEffect } from "react";
 
 export default function CheckoutPage() {
-  const { cartItems, fetchCart, subtotal } =
-    useCartStore();
+  const { cartItems, fetchCart, subtotal } = useCartStore();
 
   useEffect(() => {
     fetchCart();

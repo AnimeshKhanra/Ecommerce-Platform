@@ -1,89 +1,64 @@
-import { Request, Response } from "express";
 // Import the Stripe namespace from the core module where all sub-types
 // (Event, Checkout.Session, etc.) are properly exported.
 // The default CJS export (`StripeConstructor`) only re-exports `type Stripe`.
-import type { Stripe } from "stripe/cjs/stripe.core";
-import { stripe } from "../config/stripe";
-import prisma from "../config/prisma";
-import { ApiError } from "../utils/ApiError";
-import { ApiResponse } from "../utils/ApiResponse";
-import { asyncHandler } from "../utils/asyncHandler";
+import type { Stripe } from 'stripe/cjs/stripe.core';
+// import Stripe from 'stripe';
+import { stripe } from '../config/stripe';
+import { Request, Response } from 'express';
+import prisma from '../config/prisma';
+import { ApiError } from '../utils/ApiError';
+import { ApiResponse } from '../utils/ApiResponse';
+import { asyncHandler } from '../utils/asyncHandler';
+import { createOrderService } from '../services/order.service';
 
 /**
  * Processes a completed checkout session by creating an order from the user's cart.
  *
  * Handles idempotency (duplicate webhook deliveries) and clears the cart after order creation.
  */
+
 async function handleCheckoutSessionCompleted(
     session: Stripe.Checkout.Session
 ): Promise<void> {
+    /*
+     * Make sure the payment was actually successful.
+     */
+    if (session.payment_status !== 'paid') {
+        console.log(`Payment not completed for session: ${session.id}`);
+        return;
+    }
+
     const userId = session.metadata?.userId;
 
     if (!userId) {
-        throw new ApiError(400, "Missing userId in session metadata");
+        throw new ApiError(400, 'Missing userId in session metadata');
     }
 
     const paymentIntentId = session.payment_intent?.toString() ?? null;
-
-    // Idempotency: skip if this payment was already processed
-    if (paymentIntentId) {
-        const existingOrder = await prisma.order.findFirst({
-            where: { paymentIntentId },
-        });
-
-        if (existingOrder) {
-            console.log(`Duplicate webhook received for order: ${existingOrder.id}`);
-            return;
-        }
+    if (!paymentIntentId) {
+        throw new ApiError(400, 'Missing payment intent ID');
     }
 
-    const cart = await prisma.cart.findUnique({
-        where: { userId },
-        include: {
-            items: {
-                include: { product: true },
-            },
+    /*
+     * Idempotency check.
+     * Stripe can send the same webhook more than once.
+     */
+    const existingOrder = await prisma.order.findUnique({
+        where: {
+            paymentIntentId,
         },
     });
 
-    if (!cart || cart.items.length === 0) {
-        throw new ApiError(400, "Cart is empty or not found");
+    if (existingOrder) {
+        console.log(`Duplicate webhook received for order: ${existingOrder.id}`);
+        return;
     }
 
-    const metadata = session.metadata ?? {};
-
-    // Use a transaction to ensure order creation and cart cleanup are atomic
-    const order = await prisma.$transaction(async (tx) => {
-        const createdOrder = await tx.order.create({
-            data: {
-                userId,
-                totalAmount: Number(metadata.totalAmount) || 0,
-                paymentIntentId,
-                status: "CONFIRMED",
-                paymentStatus: "PAID",
-                shippingName: metadata.shippingName ?? "",
-                shippingAddress: metadata.shippingAddress ?? "",
-                city: metadata.city ?? "",
-                postalCode: metadata.postalCode ?? "",
-                country: metadata.country ?? "",
-                items: {
-                    create: cart.items.map((item) => ({
-                        productId: item.productId,
-                        quantity: item.quantity,
-                        price: item.product.price,
-                    })),
-                },
-            },
-        });
-
-        await tx.cartItem.deleteMany({
-            where: { cartId: cart.id },
-        });
-
-        return createdOrder;
-    });
-
-    console.log(`Order created: ${order.id} for user: ${userId}`);
+    /*
+     * Create the order.
+     */
+    const order = await createOrderService(userId, session);
+    console.log(`Order created successfully: ${order.id} for user: ${userId}`);
 }
 
 /**
@@ -96,46 +71,58 @@ async function handleCheckoutSessionCompleted(
  * (not `express.json()`) so that `req.body` is the raw Buffer needed for
  * signature verification.
  */
-const stripeWebhookHandler = asyncHandler(async (req: Request, res: Response) => {
-    console.log("Webhook hit");
-    const signature = req.headers["stripe-signature"];
+const stripeWebhookHandler = asyncHandler(
+    async (req: Request, res: Response) => {
+        console.log('Stripe webhook received');
 
-    if (!signature) {
-        throw new ApiError(400, "Missing Stripe signature header");
-    }
+        // 6. Stripe signature
+        const signature = req.headers['stripe-signature'];
 
-    if (!process.env.STRIPE_WEBHOOK_SECRET) {
-        throw new ApiError(500, "STRIPE_WEBHOOK_SECRET is not configured");
-    }
+        if (!signature) {
+            throw new ApiError(400, 'Missing Stripe signature header');
+        }
 
-    // constructEvent throws on invalid signature — no need for a separate null check
-    let event: Stripe.Event;
+        // 7. Webhook secret
+        const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-    try {
-        event = stripe.webhooks.constructEvent(
-            req.body,
-            signature,
-            process.env.STRIPE_WEBHOOK_SECRET
-        );
-    } catch (err) {
-        const message = err instanceof Error ? err.message : "Unknown error";
-        throw new ApiError(400, `Webhook signature verification failed: ${message}`);
-    }
+        if (!webhookSecret) {
+            throw new ApiError(500, 'STRIPE_WEBHOOK_SECRET is not configured');
+        }
 
-    switch (event.type) {
-        case "checkout.session.completed":
-            await handleCheckoutSessionCompleted(
-                event.data.object as Stripe.Checkout.Session
+        let event: Stripe.Event;
+
+        // 8. Verify Stripe webhook signature
+        try {
+            event = stripe.webhooks.constructEvent(
+                req.body,
+                signature,
+                webhookSecret
             );
-            break;
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Unknown error';
 
-        default:
-            console.log(`Unhandled event type: ${event.type}`);
+            throw new ApiError(
+                400,
+                `Webhook signature verification failed: ${message}`
+            );
+        }
+
+        // 9. Handle Stripe event
+        switch (event.type) {
+            case 'checkout.session.completed': {
+                const session = event.data.object as Stripe.Checkout.Session;
+                await handleCheckoutSessionCompleted(session);
+                break;
+            }
+            default:
+                console.log(`Unhandled Stripe event: ${event.type}`);
+        }
+
+        // 10. Always acknowledge successful webhook handling
+        return res
+            .status(200)
+            .json(new ApiResponse(200, null, 'Webhook received successfully'));
     }
-
-    return res
-        .status(200)
-        .json(new ApiResponse(200, null, "Webhook received"));
-});
+);
 
 export { stripeWebhookHandler };
