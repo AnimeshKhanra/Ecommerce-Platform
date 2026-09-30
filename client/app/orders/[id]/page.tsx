@@ -65,6 +65,15 @@ export default function OrderDetailsPage() {
         <div className="space-y-4">
           {order.items.map((item) => (
             <div key={item.id} className="flex justify-between border-b pb-4">
+              {item.productImage && 
+              <div className='flex'>
+                <img 
+                src={item.productImage} 
+                width="42" 
+                height="42"
+                loading='lazy'
+                alt="A descriptive summary of the image"/>
+              </div>}
               <div>
                 <h3 className="font-medium">{item.productName}</h3>
 

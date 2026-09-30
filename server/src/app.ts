@@ -61,6 +61,8 @@ import paymentRoutes from "./routes/payment.routes";
 import orderRoutes from "./routes/order.routes";
 // import adminOrderRouter from "./routes/adminOrder.routes";
 import reviewRoutes from "./routes/review.routes";
+import homeRoutes from "./routes/home.routes";
+
 
 
 // Router declaration
@@ -75,6 +77,7 @@ app.use("/api/v1/payments", paymentRoutes);
 app.use("/api/v1/orders", orderRoutes);
 // app.use("/api/v1/adminOrders", adminOrderRouter);
 app.use("/api/v1/reviews", reviewRoutes);
+app.use("/api/v1/home", homeRoutes);
 
 
 
