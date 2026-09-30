@@ -68,8 +68,11 @@ const createCheckoutSession = asyncHandler(async (req: Request, res: Response) =
     metadata: {
       userId,
       shippingName: parsed.data.shippingAddress.fullName,
-      shippingAddress: parsed.data.shippingAddress.address,
+      shippingPhone: parsed.data.shippingAddress.phone,
+      shippingAddressLine1: parsed.data.shippingAddress.addressLine1,
+      shippingAddressLine2: parsed.data.shippingAddress.addressLine2 ?? null,
       city: parsed.data.shippingAddress.city,
+      state: parsed.data.shippingAddress.state,
       postalCode: parsed.data.shippingAddress.postalCode,
       country: parsed.data.shippingAddress.country,
       totalAmount: totalAmount.toString(),

@@ -52,7 +52,7 @@ import { ClipboardList } from "lucide-react";
 import toast from "react-hot-toast";
 
 import api from "@/lib/axios";
-import { Order } from "@/types/order";
+import { Order } from "@/types/order.types";
 import {
   Card,
   CardContent,

@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { Order } from "@/types/order";
-import OrderStatusBadge from "./OrderStatusBadge";
+import Link from 'next/link';
+import { Order } from '@/types/order.types';
+import OrderStatusBadge from './OrderStatusBadge';
 
 interface Props {
   order: Order;
@@ -11,10 +11,8 @@ interface Props {
 export default function OrderCard({ order }: Props) {
   return (
     <div className="border rounded-lg p-4 shadow-sm">
-      <div className="flex justify-between">
-        <h3 className="font-semibold">
-          Order #{order.id.slice(-6)}
-        </h3>
+      <div className="flex justify-between items-center">
+        <h3 className="font-semibold">Order #{order.id.slice(-6)}</h3>
 
         <OrderStatusBadge status={order.status} />
       </div>
@@ -23,8 +21,10 @@ export default function OrderCard({ order }: Props) {
         {new Date(order.createdAt).toLocaleDateString()}
       </p>
 
-      <p className="font-bold mt-2">
-        ₹{order.totalAmount}
+      <p className="font-bold mt-2">₹{Number(order.totalAmount).toFixed(2)}</p>
+
+      <p className="text-sm text-gray-500 mt-1">
+        Payment: {order.paymentStatus}
       </p>
 
       <Link
@@ -36,3 +36,45 @@ export default function OrderCard({ order }: Props) {
     </div>
   );
 }
+
+
+
+
+// "use client";
+
+// import Link from "next/link";
+// import { Order } from "@/types/order.types";
+// import OrderStatusBadge from "./OrderStatusBadge";
+
+// interface Props {
+//   order: Order;
+// }
+
+// export default function OrderCard({ order }: Props) {
+//   return (
+//     <div className="border rounded-lg p-4 shadow-sm">
+//       <div className="flex justify-between">
+//         <h3 className="font-semibold">
+//           Order #{order.id.slice(-6)}
+//         </h3>
+
+//         <OrderStatusBadge status={order.status} />
+//       </div>
+
+//       <p className="text-gray-500 text-sm mt-2">
+//         {new Date(order.createdAt).toLocaleDateString()}
+//       </p>
+
+//       <p className="font-bold mt-2">
+//         ₹{order.totalAmount}
+//       </p>
+
+//       <Link
+//         href={`/orders/${order.id}`}
+//         className="text-blue-600 mt-3 inline-block"
+//       >
+//         View Details
+//       </Link>
+//     </div>
+//   );
+// }

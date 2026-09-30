@@ -1,7 +1,7 @@
 'use client';
 
 import api from '@/lib/axios';
-import { Order } from '@/types/order';
+import { Order } from '@/types/order.types';
 
 interface Props {
   orders: Order[];

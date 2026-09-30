@@ -84,15 +84,20 @@ model Order {
 }
 
 model OrderItem {
-  id        String   @id @default(uuid())
-  orderId   String
-  productId String
-  quantity  Int
-  price     Decimal  @db.Decimal(10, 2)
-  createdAt DateTime @default(now())
+  id          String   @id @default(uuid())
+  orderId     String
+  productId   String
+
+  productName String
+  productImage String?
+
+  quantity    Int
+  price       Decimal  @db.Decimal(10, 2)
+
+  createdAt   DateTime @default(now())
 
   order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
 }
 
 model Cart {
@@ -140,6 +145,7 @@ enum Role {
 enum OrderStatus {
   PENDING
   CONFIRMED
+  PROCESSING
   SHIPPED
   DELIVERED
   CANCELLED

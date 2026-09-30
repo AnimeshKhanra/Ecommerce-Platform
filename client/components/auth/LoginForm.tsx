@@ -28,19 +28,29 @@ export default function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [cartWarning, setCartWarning] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
+      setLoginError(null);
+      setCartWarning(null);
       await login({ email, password });
 
-      await useCartStore.getState().syncCartAfterLogin();
-
-      toast.success('Welcome back!');
+      const cartResult = await useCartStore.getState().syncCartAfterLogin();
+      if (!cartResult.success) {
+        setCartWarning(
+          cartResult.message || 'Some cart items could not be synchronized.'
+        );
+      } else {
+        toast.success('Welcome back!');
+      }
       router.push('/');
     } catch {
       toast.error('Login failed');
+      setLoginError('Login failed. Please check your email and password.');
     }
   };
 
@@ -112,6 +122,24 @@ export default function LoginForm() {
                 </button>
               </div>
             </div>
+
+            {/* Login Error */}
+            {loginError && (
+              <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                <p className="font-medium">Login failed</p>
+
+                <p className="mt-1">{loginError}</p>
+              </div>
+            )}
+
+            {/* Cart Warning */}
+            {cartWarning && (
+              <div className="rounded-md border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800">
+                <p className="font-medium">Cart synchronization warning</p>
+
+                <p className="mt-1">{cartWarning}</p>
+              </div>
+            )}
 
             {/* Submit */}
             <Button type="submit" className="w-full" disabled={loading}>

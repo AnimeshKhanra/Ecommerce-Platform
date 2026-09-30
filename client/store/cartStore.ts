@@ -14,6 +14,7 @@ import {
 } from '@/lib/cartApi';
 import type { CartItem, CartProduct, SyncCartItem } from '@/types/cart.types';
 import { useAuthStore } from './auth.store';
+import axios from 'axios';
 
 interface CartState {
   cartItems: CartItem[];
@@ -25,7 +26,7 @@ interface CartState {
   decreaseQty: (itemId: string) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
   clearCart: () => Promise<void>;
-  syncCartAfterLogin: () => Promise<void>;
+  syncCartAfterLogin: () => Promise<{success: boolean; message: string | null; }>;
 
   subtotal: () => number;
   totalItems: () => number;
@@ -69,9 +70,9 @@ export const useCartStore = create<CartState>()(
                 cartItems: get().cartItems.map((item) =>
                   item.productId === product.id
                     ? {
-                        ...item,
-                        quantity: item.quantity + quantity,
-                      }
+                      ...item,
+                      quantity: item.quantity + quantity,
+                    }
                     : item
                 ),
               });
@@ -114,9 +115,9 @@ export const useCartStore = create<CartState>()(
               cartItems: get().cartItems.map((cartItem) =>
                 cartItem.id === itemId
                   ? {
-                      ...cartItem,
-                      quantity: cartItem.quantity + 1,
-                    }
+                    ...cartItem,
+                    quantity: cartItem.quantity + 1,
+                  }
                   : cartItem
               ),
             });
@@ -153,9 +154,9 @@ export const useCartStore = create<CartState>()(
                 cartItems: get().cartItems.map((cartItem) =>
                   cartItem.id === itemId
                     ? {
-                        ...cartItem,
-                        quantity: cartItem.quantity - 1,
-                      }
+                      ...cartItem,
+                      quantity: cartItem.quantity - 1,
+                    }
                     : cartItem
                 ),
               });
@@ -244,7 +245,10 @@ export const useCartStore = create<CartState>()(
         // const token = localStorage.getItem('token');
         const { token } = useAuthStore.getState();
 
-        if (!token) return;
+        if (!token) return{
+            success: false,
+            message: "You are not authenticated.",
+          };
 
         const localItems = get().cartItems.map((item) => ({
           productId: item.productId,
@@ -254,7 +258,10 @@ export const useCartStore = create<CartState>()(
         // Nothing to sync
         if (localItems.length === 0) {
           await get().fetchCart();
-          return;
+          return {
+            success: true,
+            message: null,
+          };
         }
 
         try {
@@ -270,8 +277,24 @@ export const useCartStore = create<CartState>()(
 
           // Fetch merged database cart
           await get().fetchCart();
+          
+          return {
+            success: true,
+            message: null,
+          };
         } catch (error) {
           console.error('Cart synchronization failed:', error);
+          let message = "We couldn't synchronize your cart.";
+          if (axios.isAxiosError(error)) {
+            message =
+              error.response?.data?.message ||
+              'Some items could not be added to your cart.';
+          }
+
+          return {
+            success: false,
+            message,
+          };
         } finally {
           set({ loading: false });
         }

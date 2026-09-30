@@ -2,6 +2,13 @@ import type { Stripe } from 'stripe/cjs/stripe.core';
 import prisma from '../config/prisma';
 import { ApiError } from '../utils/ApiError';
 
+import {
+  getCache,
+  setCache,
+  delCache,
+} from "../utils/redisUtils";
+import { OrderStatus } from "@prisma/client";
+
 // NOTE: keep these in sync with checkout.service.ts,
 // or better, move them into a shared file (e.g. utils/pricing.ts).
 const FREE_SHIPPING_THRESHOLD = 1000; // in rupees
@@ -92,6 +99,8 @@ const createOrderService = async (
                     items: {
                         create: cart.items.map((item) => ({
                             productId: item.productId,
+                            productName: item.product.name,
+                            productImage: item.product.images[0] ?? null,
                             quantity: item.quantity,
                             // Snapshot the price at the time of purchase
                             price: item.product.price,
@@ -115,145 +124,327 @@ const createOrderService = async (
     return order;
 };
 
+/* =========================================================
+   GET USER ORDERS
+========================================================= */
+
+const getUserOrdersService = async (userId: string) => {
+  const cacheKey = `orders:user:${userId}`;
+
+  const cachedOrders = await getCache<any[]>(cacheKey);
+
+  if (cachedOrders) {
+    return cachedOrders;
+  }
+
+  const orders = await prisma.order.findMany({
+    where: {
+      userId,
+    },
+
+    include: {
+      items: {
+        include: {
+          product: {
+            select: {
+              id: true,
+              name: true,
+              images: true,
+            },
+          },
+        },
+      },
+    },
+
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  await setCache(cacheKey, orders, 3600);
+
+  return orders;
+};
+
+
+/* =========================================================
+   GET ORDER BY ID
+========================================================= */
+
+const getOrderByIdService = async (
+  orderId: string,
+  userId: string,
+  isAdmin: boolean
+) => {
+  const cacheKey = `order:${orderId}`;
+
+  const cachedOrder = await getCache<any>(cacheKey);
+
+  if (cachedOrder) {
+    if (
+      cachedOrder.userId !== userId &&
+      !isAdmin
+    ) {
+      throw new ApiError(
+        403,
+        "Access denied"
+      );
+    }
+
+    return cachedOrder;
+  }
+
+  const order = await prisma.order.findUnique({
+    where: {
+      id: orderId,
+    },
+
+    include: {
+      items: {
+        include: {
+          product: {
+            select: {
+              id: true,
+              name: true,
+              images: true,
+            },
+          },
+        },
+      },
+
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  if (!order) {
+    throw new ApiError(
+      404,
+      "Order not found"
+    );
+  }
+
+  if (
+    order.userId !== userId &&
+    !isAdmin
+  ) {
+    throw new ApiError(
+      403,
+      "Access denied"
+    );
+  }
+
+  await setCache(
+    cacheKey,
+    order,
+    3600
+  );
+
+  return order;
+};
+
+
+/* =========================================================
+   UPDATE ORDER STATUS
+   ADMIN ONLY
+========================================================= */
+
+const updateOrderStatusService = async (
+  orderId: string,
+  status: OrderStatus
+) => {
+  const existingOrder =
+    await prisma.order.findUnique({
+      where: {
+        id: orderId,
+      },
+    });
+
+  if (!existingOrder) {
+    throw new ApiError(
+      404,
+      "Order not found"
+    );
+  }
+
+  if (
+    existingOrder.status === "DELIVERED"
+  ) {
+    throw new ApiError(
+      400,
+      "Delivered order status cannot be changed"
+    );
+  }
+
+  if (
+    existingOrder.status === "CANCELLED"
+  ) {
+    throw new ApiError(
+      400,
+      "Cancelled order status cannot be changed"
+    );
+  }
+
+  const updatedOrder =
+    await prisma.order.update({
+      where: {
+        id: orderId,
+      },
+
+      data: {
+        status,
+      },
+
+      include: {
+        items: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                name: true,
+                images: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+  /*
+   * Invalidate single-order cache
+   */
+  await delCache(
+    `order:${orderId}`
+  );
+
+  /*
+   * Invalidate user's order-list cache
+   */
+  await delCache(
+    `orders:user:${existingOrder.userId}`
+  );
+
+  return updatedOrder;
+};
+
+
+/* =========================================================
+   CANCEL ORDER
+   CUSTOMER
+========================================================= */
+
+const cancelOrderService = async (
+  orderId: string,
+  userId: string
+) => {
+  const order =
+    await prisma.order.findUnique({
+      where: {
+        id: orderId,
+      },
+
+      include: {
+        items: true,
+      },
+    });
+
+  if (!order) {
+    throw new ApiError(
+      404,
+      "Order not found"
+    );
+  }
+
+  /*
+   * Customer can cancel only their own order
+   */
+  if (order.userId !== userId) {
+    throw new ApiError(
+      403,
+      "Access denied"
+    );
+  }
+
+  /*
+   * Already cancelled
+   */
+  if (order.status === "CANCELLED") {
+    throw new ApiError(
+      400,
+      "Order is already cancelled"
+    );
+  }
+
+  /*
+   * Cannot cancel delivered order
+   */
+  if (order.status === "DELIVERED") {
+    throw new ApiError(
+      400,
+      "Delivered order cannot be cancelled"
+    );
+  }
+
+  /*
+   * Cannot cancel shipped order
+   */
+  if (order.status === "SHIPPED") {
+    throw new ApiError(
+      400,
+      "Shipped order cannot be cancelled"
+    );
+  }
+
+  const cancelledOrder =
+    await prisma.order.update({
+      where: {
+        id: orderId,
+      },
+
+      data: {
+        status: "CANCELLED",
+      },
+
+      include: {
+        items: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                name: true,
+                images: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+  /*
+   * Clear Redis
+   */
+  await delCache(
+    `order:${orderId}`
+  );
+
+  await delCache(
+    `orders:user:${userId}`
+  );
+
+  return cancelledOrder;
+};
+
+
 export { createOrderService };
 
-
-
-
-
-// import type { Stripe } from 'stripe/cjs/stripe.core';
-// // import { Stripe } from "stripe";
-// import prisma from '../config/prisma';
-// import { ApiError } from '../utils/ApiError';
-
-// const createOrderService = async (
-//     userId: string,
-//     session: Stripe.Checkout.Session
-// ) => {
-//     const paymentIntentId = session.payment_intent?.toString() ?? null;
-
-//     if (!paymentIntentId) {
-//         throw new ApiError(400, 'Payment intent ID is missing');
-//     }
-
-//     const metadata = session.metadata ?? {};
-
-//     /*
-//      * Get the user's cart with current product information.
-//      */
-//     const cart = await prisma.cart.findUnique({
-//         where: {
-//             userId,
-//         },
-//         include: {
-//             items: {
-//                 include: {
-//                     product: true,
-//                 },
-//             },
-//         },
-//     });
-
-//     if (!cart || cart.items.length === 0) {
-//         throw new ApiError(400, 'Cart is empty or not found');
-//     }
-
-//     /*
-//      * Create Order + OrderItems + update stock
-//      * + clear cart atomically.
-//      */
-//     /*
-//     * 2. Calculate total from database prices
-//          */
-//     const subtotalPaise = cart.items.reduce(
-//         (sum, item) =>
-//             sum + Math.round(Number(item.product.price) * 100) * item.quantity,
-//         0
-//     );
-
-//     const shippingPaise = subtotalPaise / 100 > 1000 ? 0 : 99 * 100;
-//     const totalPaise = subtotalPaise + shippingPaise;
-//     if (session.amount_total !== totalPaise) {
-//         throw new ApiError(400, 'Checkout amount does not match order total');
-//     }
-//     const total = totalPaise / 100;
-
-//     const order = await prisma.$transaction(async (tx) => {
-//         //* Verify and decrease stock
-//         for (const item of cart.items) {
-//             const updatedProduct = await tx.product.updateMany({
-//                 where: {
-//                     id: item.productId,
-//                     stock: {
-//                         gte: item.quantity,
-//                     },
-//                 },
-//                 data: {
-//                     stock: {
-//                         decrement: item.quantity,
-//                     },
-//                 },
-//             });
-
-//             if (updatedProduct.count !== 1) {
-//                 throw new ApiError(
-//                     400,
-//                     `Insufficient stock for product: ${item.product.name}`
-//                 );
-//             }
-//         }
-
-//         /*
-//          * 3. Create Order
-//          */
-//         const createdOrder = await tx.order.create({
-//             data: {
-//                 userId,
-//                 totalAmount: total,
-//                 paymentIntentId,
-//                 status: 'CONFIRMED',
-//                 paymentStatus: 'PAID',
-
-//                 shippingName: metadata.shippingName ?? '',
-//                 shippingPhone: metadata.shippingPhone ?? '',
-//                 shippingAddress1: metadata.shippingAddress1 ?? '',
-//                 shippingAddress2: metadata.shippingAddress2 || null,
-//                 shippingCity: metadata.shippingCity ?? '',
-//                 shippingState: metadata.shippingState ?? '',
-//                 shippingPostalCode: metadata.shippingPostalCode ?? '',
-//                 shippingCountry: metadata.shippingCountry ?? '',
-
-//                 items: {
-//                     create: cart.items.map((item) => ({
-//                         productId: item.productId,
-//                         quantity: item.quantity,
-//                         // Snapshot current product price
-//                         price: item.product.price,
-//                     })),
-//                 },
-//             },
-//             include: {
-//                 items: true,
-//             },
-//         });
-
-//         /*
-//          * 4. Clear cart
-//          */
-//         await tx.cartItem.deleteMany({
-//             where: {
-//                 cartId: cart.id,
-//             },
-//         });
-
-//         return createdOrder;
-//     });
-
-//     console.log(`Order created: ${order.id} for user: ${userId}`);
-//     return order;
-// };
-
-// export { createOrderService };
-
-
-
+export {
+  getUserOrdersService,
+  getOrderByIdService,
+  updateOrderStatusService,
+  cancelOrderService,
+};
