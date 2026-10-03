@@ -110,5 +110,88 @@ const getReviews = asyncHandler(async (req: Request, res: Response) => {
   return res.status(200).json(new ApiResponse(200, data, "Reviews fetched"));
 });
 
+const updateReview = asyncHandler(async(req: Request, res: Response) => {
+  const userId = req.user?.id;
+  if(!userId){
+    throw new ApiError(401, "You are not Authorized");
+  }
 
-export { createReview, getReviews };
+  const reviewId = req.params.id;
+  if(!reviewId || Array.isArray(reviewId)){
+    throw new ApiError(400, "ReviewID is missing");
+  }
+
+  const { rating, comment } = req.body;
+
+  const existingReview = await prisma.review.findUnique({
+    where: {
+      id: reviewId,
+    }
+  })
+
+  if(!existingReview){
+    throw new ApiError(404, "Review not found");
+  }
+
+  if(existingReview.userId !== userId){
+    throw new ApiError(403, "You can only update your own reviews");
+  }
+
+  const updatedReview = await prisma.review.update({
+    where: {
+      id: reviewId,
+    },
+    data: {
+      rating,
+      comment,
+    }
+  })
+
+  await delCache(`reviews:${existingReview.productId}`);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updatedReview, "Review updated successfully"));
+})
+
+const deleteReview = asyncHandler(async(req: Request, res: Response) => {
+  const userId = req.user?.id;
+  if(!userId){
+    throw new ApiError(401, "You are not Authorized");
+  }
+
+  const reviewId = req.params.id;
+  if(!reviewId || Array.isArray(reviewId)){
+    throw new ApiError(400, "ReviewID is missing");
+  }
+
+  const existingReview = await prisma.review.findUnique({
+    where: {
+      id: reviewId,
+    }
+  })
+
+  if(!existingReview){
+    throw new ApiError(404, "Review not found");
+  }
+
+  if(existingReview.userId !== userId){
+    throw new ApiError(403, "You can only delete your own reviews");
+  }
+
+  await prisma.review.delete({
+    where: {
+      id: reviewId,
+    }
+  })
+
+  await delCache(`reviews:${existingReview.productId}`);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, null, "Review deleted successfully"))
+
+})
+
+
+export { createReview, getReviews, updateReview, deleteReview };
