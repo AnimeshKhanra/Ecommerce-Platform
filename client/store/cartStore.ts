@@ -199,11 +199,11 @@ export const useCartStore = create<CartState>()(
       clearCart: async () => {
         try {
           set({ loading: true });
-          // const token = localStorage.getItem('token');
           const { token } = useAuthStore.getState();
           if (!token) {
             set({
               cartItems: [],
+              loading: false,
             });
             return;
           }
@@ -218,28 +218,6 @@ export const useCartStore = create<CartState>()(
           set({ loading: false });
         }
       },
-
-      // clearCart: () => {
-      //   set({
-      //     cartItems: [],
-      //   });
-      // },
-
-      // syncCartAfterLogin: async () => {
-      //   const token = localStorage.getItem('token');
-      //   if (!token) return;
-
-      //   const localItems = get().cartItems.map((item) => ({
-      //     productId: item.productId,
-      //     quantity: item.quantity,
-      //   }));
-
-      //   if (localItems.length > 0) {
-      //     await syncCartApi(localItems);
-      //   }
-
-      //   await get().fetchCart();
-      // },
 
       syncCartAfterLogin: async () => {
         // const token = localStorage.getItem('token');

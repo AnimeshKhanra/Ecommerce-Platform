@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth.store';
+import { useCartStore } from '@/store/cartStore';
 
 
 export default function Navbar() {
@@ -43,6 +44,7 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     await logout();
+    useCartStore.getState().clearCart();
     setOpen(false);
     window.location.href = '/';
   };

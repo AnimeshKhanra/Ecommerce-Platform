@@ -1,19 +1,18 @@
 import { Router } from "express";
-import { uploadImage } from "../controllers/upload.controller";
+import { uploadImages } from "../controllers/upload.controller";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import { adminMiddleware } from "../middlewares/admin.middleware";
 import upload from "../middlewares/upload.middleware";
-// import prisma from "../config/prisma";
 
 const router = Router();
 
 router
-    .route("/image")
+    .route("/images")
     .post(
         authMiddleware, 
         adminMiddleware, 
-        upload.single("image"),
-        uploadImage
+        upload.array("images", 8),
+        uploadImages
     )
 
 export default router;
