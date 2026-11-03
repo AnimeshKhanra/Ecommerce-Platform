@@ -16,7 +16,7 @@ export default function RecentOrdersTable({ orders }: { orders: any[] }) {
                 <tbody>
                     {orders?.map((order) => (
                         // <tr key={order.id}>
-                        <tr key={Date.now()}>
+                        <tr key={order?.id}>
                             {/* <td>{order?.id?.slice(0, 8)}</td> */}
                             <td>{order?.id ? order.id.slice(0, 8) : 'N/A'}</td>
 

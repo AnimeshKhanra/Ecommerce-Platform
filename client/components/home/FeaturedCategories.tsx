@@ -1,9 +1,24 @@
 import Link from "next/link";
 import { HomeCategory } from "@/types/home.types";
+// import { useEffect, useState } from "react";
+// import { getAllProducts } from "@/services/product.service";
 
 interface FeaturedCategoriesProps {
     categories: HomeCategory[];
 }
+
+
+// const [selectedCategory, setSelectedCategory] = useState("");
+
+// useEffect(() => {
+//   fetchProducts();
+// }, [selectedCategory])
+
+// async function fetchProducts(){
+//     const data = await getAllProducts({
+//         category: selectedCategory,
+//     })
+// }
 
 export default function FeaturedCategories({
     categories,
@@ -30,6 +45,7 @@ export default function FeaturedCategories({
                     <Link
                         key={category.id}
                         href={`/products?category=${category.id}`}
+                        // onClick={setSelectedCategory(category.id)}
                         className="rounded-xl border bg-white p-6 text-center transition hover:-translate-y-1 hover:shadow-md"
                     >
                         <h3 className="font-semibold text-gray-900">

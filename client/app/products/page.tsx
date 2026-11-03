@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Category, Product, ProductsResponse } from "@/types/product.types";
+import { Category, Product } from "@/types/product.types";
 import { useDebounce } from "@/hooks/useDebounce";
 import { getAllProducts } from "@/services/product.service";
 import { getAllCategories } from "@/services/category.service";

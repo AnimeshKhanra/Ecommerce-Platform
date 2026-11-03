@@ -6,6 +6,8 @@ import FeaturedProducts from "@/components/home/FeaturedProducts";
 import NewArrivals from "@/components/home/NewArrivals";
 import WhyChooseUs from "@/components/home/WhyChooseUs";
 import type { Metadata } from "next";
+// import { useEffect, useState } from "react";
+// import { getAllProducts } from "@/services/product.service";
 
 
 
@@ -15,7 +17,17 @@ export const metadata: Metadata = {
         "Discover quality products, new arrivals, and great shopping experiences.",
 };
 
+// const [selectedCategory, setselectedCategory] = useState("");
 
+// useEffect(() => {
+//   fetchProducts();
+// }, [selectedCategory])
+
+// async function fetchProducts(){
+//     const data = await getAllProducts({
+//         category: selectedCategory,
+//     })
+// }
 
 
 export default async function HomePage() {
@@ -27,6 +39,7 @@ export default async function HomePage() {
 
             <FeaturedCategories
                 categories={homeData.featuredCategories}
+                // selectedCategory={selectedCategory}
             />
 
             <FeaturedProducts
