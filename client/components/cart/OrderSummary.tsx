@@ -4,8 +4,7 @@ import Link from "next/link";
 import { useCartStore } from "@/store/cartStore";
 
 export default function OrderSummary() {
-  const { subtotal, totalItems } =
-    useCartStore();
+  const { subtotal, totalItems } = useCartStore();
 
   const shipping =
     subtotal() > 1000 ? 0 : 99;

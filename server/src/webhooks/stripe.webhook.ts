@@ -20,6 +20,16 @@ import { createOrderService } from '../services/order.service';
 async function handleCheckoutSessionCompleted(
     session: Stripe.Checkout.Session
 ): Promise<void> {
+    // test purpose logs
+    console.log("[WEBHOOK] Processing checkout session");
+    console.log({
+        sessionId: session.id,
+        paymentStatus: session.payment_status,
+        paymentIntentId: session.payment_intent,
+        userId: session.metadata?.userId,
+        amountTotal: session.amount_total,
+    });
+
     /*
      * Make sure the payment was actually successful.
      */
@@ -57,8 +67,20 @@ async function handleCheckoutSessionCompleted(
     /*
      * Create the order.
      */
-    const order = await createOrderService(userId, session);
-    console.log(`Order created successfully: ${order.id} for user: ${userId}`);
+    // const order = await createOrderService(userId, session);
+
+    console.log("[WEBHOOK] Calling createOrderService");
+
+    try {
+        const order = await createOrderService(userId, session);
+
+        console.log("[WEBHOOK] Order created successfully:", order.id);
+    } catch (error) {
+        console.error("[WEBHOOK] Order creation failed:", error);
+        throw error;
+    }
+
+    // console.log(`Order created successfully: ${order.id} for user: ${userId}`);
 }
 
 /**
@@ -106,6 +128,9 @@ const stripeWebhookHandler = asyncHandler(
                 `Webhook signature verification failed: ${message}`
             );
         }
+
+        console.log("[WEBHOOK] Event received:", event.type);
+        console.log("[WEBHOOK] Event ID:", event.id);
 
         // 9. Handle Stripe event
         switch (event.type) {

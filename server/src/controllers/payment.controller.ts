@@ -44,21 +44,72 @@ const createCheckoutSession = asyncHandler(async (req: Request, res: Response) =
     throw new ApiError(400, "Cart is Empty");
   }
 
-  const lineItems = cart.items.map((item) => ({
-    price_data: {
-      currency: "inr",
-      product_data: {
-        name: item.product.name,
-        images: item.product.images,
-      },
-      unit_amount: Math.round(Number(item.product.price) * 100)
-    },
-    quantity: item.quantity
-  }))
-
-  const totalAmount = cart.items.reduce(
-    (sum, item) => sum + Number(item.product.price) * item.quantity, 0
+  // Calculate product subtotal in paise
+  const subtotalPaise = cart.items.reduce(
+    (sum, item) =>
+      sum +
+      Math.round(Number(item.product.price) * 100) *
+      item.quantity,
+    0
   );
+
+  // Apply the same shipping rules as order.service.ts
+  const shippingPaise = subtotalPaise > 100000 ? 0 : 9900;
+
+  // const lineItems = cart.items.map((item) => ({
+  //   price_data: {
+  //     currency: "inr",
+  //     product_data: {
+  //       name: item.product.name,
+  //       images: item.product.images,
+  //     },
+  //     unit_amount: Math.round(Number(item.product.price) * 100)
+  //   },
+  //   quantity: item.quantity
+  // }))
+
+  // Create Stripe line items
+  const lineItems = [
+    ...cart.items.map((item) => ({
+      price_data: {
+        currency: "inr",
+        product_data: {
+          name: item.product.name,
+          images: item.product.images,
+        },
+        unit_amount: Math.round(
+          Number(item.product.price) * 100
+        ),
+      },
+      quantity: item.quantity,
+    })),
+
+    // Add shipping as a separate Stripe line item
+    ...(shippingPaise > 0
+      ? [
+        {
+          price_data: {
+            currency: "inr",
+            product_data: {
+              name: "Shipping Fee",
+            },
+            unit_amount: shippingPaise,
+          },
+          quantity: 1,
+        },
+      ]
+      : []),
+  ];
+
+  // Final amount in rupees
+  const totalAmount =
+    (subtotalPaise + shippingPaise) / 100;
+  
+  console.log("Total Amount: ", totalAmount);
+
+  // const totalAmount = cart.items.reduce(
+  //   (sum, item) => sum + Number(item.product.price) * item.quantity, 0
+  // );
 
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card", "upi"],
@@ -67,14 +118,18 @@ const createCheckoutSession = asyncHandler(async (req: Request, res: Response) =
     customer_email: user?.email,
     metadata: {
       userId,
+
       shippingName: parsed.data.shippingAddress.fullName,
       shippingPhone: parsed.data.shippingAddress.phone,
-      shippingAddressLine1: parsed.data.shippingAddress.addressLine1,
-      shippingAddressLine2: parsed.data.shippingAddress.addressLine2 ?? null,
-      city: parsed.data.shippingAddress.city,
-      state: parsed.data.shippingAddress.state,
-      postalCode: parsed.data.shippingAddress.postalCode,
-      country: parsed.data.shippingAddress.country,
+
+      shippingAddress1: parsed.data.shippingAddress.addressLine1,
+      shippingAddress2: parsed.data.shippingAddress.addressLine2 ?? "",
+
+      shippingCity: parsed.data.shippingAddress.city,
+      shippingState: parsed.data.shippingAddress.state,
+      shippingPostalCode: parsed.data.shippingAddress.postalCode,
+      shippingCountry: parsed.data.shippingAddress.country,
+
       totalAmount: totalAmount.toString(),
     },
     success_url: `${process.env.CLIENT_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,

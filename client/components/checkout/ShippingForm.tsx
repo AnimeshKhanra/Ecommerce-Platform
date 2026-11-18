@@ -215,14 +215,14 @@ export default function ShippingForm() {
         </div>
       </div>
 
-        {/* Submit */}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-black text-white py-4 rounded-xl hover:opacity-90 disabled:opacity-50"
-        >
-          {loading ? 'Redirecting...' : 'Proceed to Payment'}
-        </button>
+      {/* Submit */}
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full bg-black text-white py-4 rounded-xl hover:opacity-90 disabled:opacity-50"
+      >
+        {loading ? 'Redirecting...' : 'Proceed to Payment'}
+      </button>
     </form>
   );
 }

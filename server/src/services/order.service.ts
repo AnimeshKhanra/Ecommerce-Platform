@@ -47,6 +47,14 @@ const createOrderService = async (
       : toPaise(SHIPPING_FEE);
   const totalPaise = subtotalPaise + shippingPaise;
 
+  // console.log("[ORDER] Amount verification:", {
+  //   subtotalPaise,
+  //   shippingPaise,
+  //   expectedTotal: totalPaise,
+  //   stripeTotal: session.amount_total,
+  //   amountMatches: session.amount_total === totalPaise,
+  // });
+
   // 3. Verify the amount Stripe charged matches our calculation
   //    (done before the transaction: no DB writes are needed to check it)
   if (session.amount_total !== totalPaise) {
@@ -108,7 +116,7 @@ const createOrderService = async (
         include: { items: true },
       });
 
-      // Clear cart
+      // Clear cart  -- this is done after order creation to ensure that if the order creation fails, the cart remains intact for retry.
       await tx.cartItem.deleteMany({
         where: { cartId: cart.id },
       });
@@ -117,6 +125,12 @@ const createOrderService = async (
     },
     { timeout: 10000 }
   );
+
+
+  await delCache(`cart:${userId}`);
+
+
+  await delCache(`orders:user:${userId}`);
 
   console.log(`Order created: ${order.id} for user: ${userId}`);
   return order;
@@ -295,12 +309,15 @@ const updateOrderStatusService = async (
    CUSTOMER
 ========================================================= */
 
-const cancelOrderService = async (orderId: string, userId: string) => {
+const cancelOrderService = async (
+  orderId: string,
+  userId: string
+) => {
+  // 1. Find the order and verify ownership
   const order = await prisma.order.findUnique({
     where: {
       id: orderId,
     },
-
     include: {
       items: true,
     },
@@ -310,58 +327,94 @@ const cancelOrderService = async (orderId: string, userId: string) => {
     throw new ApiError(404, 'Order not found');
   }
 
-
-  // Customer can cancel only their own order
-
   if (order.userId !== userId) {
     throw new ApiError(403, 'Access denied');
   }
 
-  if (order.status === 'CANCELLED') {
-    throw new ApiError(400, 'Order is already cancelled');
+  // 2. Check whether cancellation is allowed
+  const cancellableStatuses: OrderStatus[] = [
+    'PENDING',
+    'CONFIRMED',
+  ];
+
+  if (!cancellableStatuses.includes(order.status)) {
+    throw new ApiError(
+      400,
+      `Order cannot be cancelled because its status is ${order.status}`
+    );
   }
 
-  if (order.status === 'DELIVERED') {
-    throw new ApiError(400, 'Delivered order cannot be cancelled');
-  }
+  // 3. Restore stock and cancel order atomically
+  const cancelledOrder = await prisma.$transaction(
+    async (tx) => {
+      // Conditional update prevents duplicate cancellation
+      const result = await tx.order.updateMany({
+        where: {
+          id: orderId,
+          userId,
+          status: {
+            in: ['PENDING', 'CONFIRMED'],
+          },
+        },
+        data: {
+          status: 'CANCELLED',
+          ...(order.paymentStatus === 'PAID' && {
+            paymentStatus: 'REFUND_PENDING',
+          }),
+        },
+      });
 
-  if (order.status === 'SHIPPED') {
-    throw new ApiError(400, 'Shipped order cannot be cancelled');
-  }
+      // Another request may have changed the order
+      if (result.count !== 1) {
+        throw new ApiError(
+          409,
+          'Order status changed. Please refresh and try again.'
+        );
+      }
 
-  const cancelledOrder = await prisma.order.update({
-    where: {
-      id: orderId,
-    },
+      // Restore stock for every ordered product
+      for (const item of order.items) {
+        await tx.product.update({
+          where: {
+            id: item.productId,
+          },
+          data: {
+            stock: {
+              increment: item.quantity,
+            },
+          },
+        });
+      }
 
-    data: {
-      status: 'CANCELLED',
-    },
-
-    include: {
-      items: {
+      // Return the updated order
+      return await tx.order.findUniqueOrThrow({
+        where: {
+          id: orderId,
+        },
         include: {
-          product: {
-            select: {
-              id: true,
-              name: true,
-              images: true,
+          items: {
+            include: {
+              product: {
+                select: {
+                  id: true,
+                  name: true,
+                  images: true,
+                },
+              },
             },
           },
         },
-      },
-    },
-  });
+      });
+    }
+  );
 
-  /*
-   * Clear Redis
-   */
+  // 4. Invalidate Redis cache
   await delCache(`order:${orderId}`);
-
   await delCache(`orders:user:${userId}`);
 
   return cancelledOrder;
 };
+
 
 
 
