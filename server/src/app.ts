@@ -59,7 +59,6 @@ import cartRoutes from "./routes/cart.routes";
 import checkoutRoutes from "./routes/checkout.routes";
 import paymentRoutes from "./routes/payment.routes";
 import orderRoutes from "./routes/order.routes";
-// import adminOrderRouter from "./routes/adminOrder.routes";
 import reviewRoutes from "./routes/review.routes";
 import homeRoutes from "./routes/home.routes";
 
@@ -75,13 +74,19 @@ app.use("/api/v1/cart", cartRoutes);
 app.use("/api/v1/checkout", checkoutRoutes);
 app.use("/api/v1/payments", paymentRoutes);
 app.use("/api/v1/orders", orderRoutes);
-// app.use("/api/v1/adminOrders", adminOrderRouter);
 app.use("/api/v1/reviews", reviewRoutes);
 app.use("/api/v1/home", homeRoutes);
 
 
 
-
+// Health check endpoint
+app.get("/api/v1/health", (_req, res) => {
+  res.status(200).json({
+    status: "healthy",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  });
+});
 
 // Global Error Middleware
 app.use(errorHandler);

@@ -1,8 +1,8 @@
 // Import the Stripe namespace from the core module where all sub-types
 // (Event, Checkout.Session, etc.) are properly exported.
 // The default CJS export (`StripeConstructor`) only re-exports `type Stripe`.
-import type { Stripe } from 'stripe/cjs/stripe.core';
-// import Stripe from 'stripe';
+// import type { Stripe } from 'stripe/cjs/stripe.core';
+import type Stripe from "stripe";
 import { stripe } from '../config/stripe';
 import { Request, Response } from 'express';
 import prisma from '../config/prisma';

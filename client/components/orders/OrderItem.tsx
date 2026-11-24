@@ -8,7 +8,7 @@ export default function OrderItem({ item }: Props) {
   return (
     <div className="flex gap-4 border-b pb-4">
       <img
-        src={item.image}
+        src={item.productImage || "/placeholder.png"}
         alt={item.productName}
         className="w-20 h-20 object-cover rounded"
       />

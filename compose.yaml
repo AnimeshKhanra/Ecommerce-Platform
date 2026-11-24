@@ -1,0 +1,126 @@
+
+name: ecommerce-platform
+
+services:
+
+  # Redis
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+    command: ["redis-server", "--appendonly", "yes"]
+
+    volumes:
+      - redis_data:/data
+
+    networks:
+      - ecommerce-network
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  
+  # Express Backend
+  
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+
+    image: ecommerce-backend:1.0
+
+    restart: unless-stopped
+
+    env_file:
+      - ./server/.env.docker
+
+    environment:
+      NODE_ENV: production
+      PORT: "5000"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_URL: redis://redis:6379
+
+    ports:
+      - "127.0.0.1:5000:5000"
+
+    networks:
+      - ecommerce-network
+
+    depends_on:
+      redis:
+        condition: service_healthy
+
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "require('http').get('http://127.0.0.1:5000/api/v1/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+
+  
+  # Next.js Frontend
+  
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:5000/api/v1
+
+    image: ecommerce-frontend:1.0
+
+    restart: unless-stopped
+
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      INTERNAL_API_URL: http://backend:5000/api/v1
+
+    ports:
+      - "127.0.0.1:3000:3000"
+
+    networks:
+      - ecommerce-network
+
+    depends_on:
+      backend:
+        condition: service_healthy
+
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "require('http').get('http://127.0.0.1:3000',r=>{r.resume();process.exit(r.statusCode<500?0:1)}).on('error',()=>process.exit(1))"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+
+
+# Existing Docker Network
+
+networks:
+  ecommerce-network:
+    external: true
+    name: ecommerce-network
+
+
+
+# Persistent Redis Storage
+
+volumes:
+  redis_data:

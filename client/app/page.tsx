@@ -1,5 +1,7 @@
-import { getHomeData } from "@/services/home.service";
+export const dynamic = "force-dynamic";
 
+
+import { getHomeData } from "@/services/home.service";
 import HeroSection from "@/components/home/HeroSection";
 import FeaturedCategories from "@/components/home/FeaturedCategories";
 import FeaturedProducts from "@/components/home/FeaturedProducts";

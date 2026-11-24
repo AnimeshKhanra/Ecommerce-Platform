@@ -10,10 +10,15 @@ interface Props {
     }>;
 }
 
+const apiUrl =
+  process.env.INTERNAL_API_URL ??
+  process.env.NEXT_PUBLIC_API_URL;
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { id } = await params;
     const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/products/${id}`,
+        // `${process.env.NEXT_PUBLIC_API_URL}/products/${id}`,
+        `${apiUrl}/products/${id}`,
         { cache: "no-store", }
     );
 

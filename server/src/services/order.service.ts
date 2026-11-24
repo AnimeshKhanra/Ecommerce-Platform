@@ -1,4 +1,5 @@
-import type { Stripe } from 'stripe/cjs/stripe.core';
+// import type { Stripe } from 'stripe/cjs/stripe.core';
+import type Stripe from "stripe";
 import prisma from '../config/prisma';
 import { ApiError } from '../utils/ApiError';
 

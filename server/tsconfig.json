@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "commonjs",
+    "module": "Node16",
+    "moduleResolution": "Node16",
     "rootDir": "./src",
     "outDir": "./dist",
     "strict": true,
@@ -9,7 +10,9 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "noEmitOnError": true,
+    "types": ["node", "jest", "mocha"]
   },
   "include": [
     "src/**/*"
@@ -19,6 +22,35 @@
     "dist"
   ]
 }
+
+
+
+// {
+//   "compilerOptions": {
+//     "target": "ES2020",
+//     "module": "commonjs",
+//     "rootDir": "./src",
+//     "outDir": "./dist",
+//     "strict": true,
+//     "esModuleInterop": true,
+//     "skipLibCheck": true,
+//     "forceConsistentCasingInFileNames": true,
+//     "resolveJsonModule": true,
+//     "sourceMap": true
+//   },
+//   "include": [
+//     "src/**/*"
+//   ],
+//   "exclude": [
+//     "node_modules",
+//     "dist"
+//   ]
+// }
+
+
+
+
+
 //^ This file is currently not used, but it can be used to configure the TypeScript compiler for the server project. You can customize the compiler options as needed for your project.
 // {
 //   // Visit https://aka.ms/tsconfig to read more about this file

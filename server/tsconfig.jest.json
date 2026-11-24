@@ -1,0 +1,33 @@
+
+// {
+//   "extends": "./tsconfig.json",
+//   "compilerOptions": {
+//     "module": "CommonJS",
+//     "moduleResolution": "Node",
+//     "isolatedModules": true,
+//     "outDir": "./dist-test",
+//     "noEmit": false
+//   },
+//   "include": [
+//     "src/**/*.ts",
+//     "tests/**/*.ts"
+//   ]
+// }
+
+
+
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "isolatedModules": true,
+    "outDir": "./dist-test",
+    "noEmit": false,
+    "ignoreDeprecations": "6.0"
+  },
+  "include": [
+    "src/**/*.ts",
+    "tests/**/*.ts"
+  ]
+}
